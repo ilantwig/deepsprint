@@ -159,6 +159,25 @@
             color: #2c3e50;
             margin-bottom: 20px;
         }
+        
+        .result-content {
+            position: relative;
+            max-height: 4.5em; /* Approximately 3 lines */
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .result-content.expanded {
+            max-height: none;
+        }
+
+        .show-more-btn {
+            color: #3498db;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 5px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -167,7 +186,7 @@
         <form method="POST" id="research-form">
             <div class="form-group">
                 <label for="research_topic">Research Topic:</label>
-                <textarea id="research_topic" name="research_topic" rows="4" required></textarea>
+                <textarea id="research_topic" name="research_topic" rows="4" required>{{ research_topic if research_topic else '' }}</textarea>
             </div>
             <button type="submit">Generate Plan</button>
         </form>
@@ -262,7 +281,10 @@
                                 finalReportDiv.className = 'final-report';
                                 finalReportDiv.innerHTML = `
                                     <h2>Final Research Report</h2>
-                                    ${result.final_report}
+                                    <div class="result-content">
+                                        ${result.final_report}
+                                    </div>
+                                    <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
                                 `;
                                 resultsContainer.appendChild(finalReportDiv);
                                 finalReportDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -277,14 +299,16 @@
                                             <h3>${steps[result.step - 1]}</h3>
                                             ${result.error ? 
                                                 `<p class="error">${result.error}</p>` :
-                                                `<p>${result.result}</p>
+                                                `<div class="result-content">
+                                                    <p>${result.result}</p>
+                                                 </div>
+                                                 <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
                                                  <p class="execution-time">Execution time: ${result.execution_time}</p>`
                                             }
                                         </div>
                                     </div>
                                 `;
                                 resultsContainer.appendChild(resultDiv);
-                                // Scroll to the new result
                                 resultDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
                             }
                         } catch (e) {
@@ -298,6 +322,12 @@
             } finally {
                 document.getElementById('loading-spinner').style.display = 'none';
             }
+        }
+
+        function toggleContent(button) {
+            const content = button.previousElementSibling;
+            content.classList.toggle('expanded');
+            button.textContent = content.classList.contains('expanded') ? 'Show Less' : 'Show More';
         }
     </script>
 </body>
