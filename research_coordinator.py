@@ -143,10 +143,11 @@ def generate_final_report(all_results: str) -> str:
     Returns:
         str: The final report
     """
-    final_report_prompt=f"""Create a verbose, detailed executive summary report in html from below content.  Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
+    final_report_prompt=f"""Create a verbose, detailed executive summary report in html from below content.  You must include MOST of the details from the original content. Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
     Content: {all_results}="""
     final_report_response=default_model.invoke(final_report_prompt)
     final_report_response=final_report_response.content.strip()
+    final_report_response=final_report_response.replace("```html","").replace("```","")
     logger.debug(f"Final report response: {final_report_response}")
     return final_report_response
 
