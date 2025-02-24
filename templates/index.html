@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Plan Generator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+            max-height: 20px;
+            font-size: 16px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 0 auto;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #3498db;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .deep-sprint-button {
+            background-color: #2ecc71;
+        }
+        
+        .deep-sprint-button:hover {
+            background-color: #27ae60;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .step-number {
+            min-width: 30px;
+            height: 30px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .research-step {
+            flex: 1;
+            margin: 0;
+            padding-top: 5px;
+        }
+        
+        .result-item {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-content h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+        
+        .execution-time {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        .error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Research Plan Generator</h1>
+        <form method="POST" id="research-form">
+            <div class="form-group">
+                <label for="research_topic">Research Topic:</label>
+                <textarea id="research_topic" name="research_topic" rows="4" required></textarea>
+            </div>
+            <button type="submit">Generate Plan</button>
+        </form>
+        
+        <div id="loading-spinner" class="spinner"></div>
+
+        {% if research_plan %}
+        <div id="research-plan-container" class="research-plan">
+            <h2>Research Plan</h2>
+            {% for step, description in research_plan.items() %}
+                <div class="step">
+                    <div class="step-number">{{ loop.index }}</div>
+                    <p class="research-step">{{ description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="button-container">
+            <button onclick="regeneratePlan('{{ research_topic }}')">Regenerate Plan</button>
+            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+        </div>
+
+        <div id="results-container"></div>
+        {% endif %}
+    </div>
+    <script>
+        document.getElementById('research-form').addEventListener('submit', function() {
+            document.getElementById('loading-spinner').style.display = 'block';
+        });
+
+        function regeneratePlan(topic) {
+            fetch('/regenerate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'research_topic=' + encodeURIComponent(topic)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Create HTML for the research plan
+                let html = '<h2>Research Plan</h2>';
+                Object.entries(data.research_plan).forEach(([step, description], index) => {
+                    html += `
+                        <div class="step">
+                            <div class="step-number">${index + 1}</div>
+                            <p class="research-step">${description}</p>
+                        </div>
+                    `;
+                });
+                document.getElementById('research-plan-container').innerHTML = html;
+            });
+        }
+
+        async function executeDeepSprint() {
+            document.getElementById('loading-spinner').style.display = 'block';
+            const resultsContainer = document.getElementById('results-container');
+            resultsContainer.innerHTML = '<h2>Research Results:</h2>';
+            
+            const steps = Array.from(document.querySelectorAll('.research-step'))
+                .map(step => step.textContent.trim());
+            
+            try {
+                const response = await fetch('/execute_deep_sprint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ research_steps: steps })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to execute steps');
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+                    
+                    const text = decoder.decode(value);
+                    const results = text.split('\n').filter(line => line.trim());
+                    
+                    results.forEach(resultStr => {
+                        try {
+                            const result = JSON.parse(resultStr);
+                            const resultDiv = document.createElement('div');
+                            resultDiv.className = 'result-item';
+                            resultDiv.innerHTML = `
+                                <div class="step">
+                                    <div class="step-number">${result.step}</div>
+                                    <div class="step-content">
+                                        <h3>${steps[result.step - 1]}</h3>
+                                        ${result.error ? 
+                                            `<p class="error">${result.error}</p>` :
+                                            `<p>${result.result}</p>
+                                             <p class="execution-time">Execution time: ${result.execution_time}</p>`
+                                        }
+                                    </div>
+                                </div>
+                            `;
+                            resultsContainer.appendChild(resultDiv);
+                            // Scroll to the new result
+                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        } catch (e) {
+                            console.error('Error parsing result:', e);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultsContainer.innerHTML += '<p class="error">Error processing research steps</p>';
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html> 

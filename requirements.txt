@@ -1,0 +1,3 @@
+flask
+crewai-tools
+langchain-openai
