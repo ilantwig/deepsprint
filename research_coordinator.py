@@ -73,7 +73,7 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
     logger.debug(f"Research plan build completed in {duration}")
     return research_plan_json 
 
-def deep_sprint_topic(step: str, previous_result: str) -> str:
+def deep_sprint_topic(step: str) -> str:
     """
     Executes a specific research step.
     
@@ -113,7 +113,7 @@ def deep_sprint_topic(step: str, previous_result: str) -> str:
         except Exception as e:
             logger.error(f"Error processing {site}: {str(e)}")
             continue
-    topic_summary_prompot=f"""You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive report on the topic.  Your response must be verbose and detailed.  Do not repeat the same information found in the previous results: {previous_result}.
+    topic_summary_prompot=f"""You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive report on the topic.  Your response must be verbose and detailed.
     Topic: {step}
     Summary: {all_results}="""
     topic_summary_response=default_model.invoke(topic_summary_prompot)

@@ -44,7 +44,7 @@ def execute_deep_sprint():
 
         for i, step in enumerate(research_steps):
             try:
-                result = deep_sprint_topic(step, previous_result)  # Pass previous result
+                result = deep_sprint_topic(step)  # Pass previous result
                 previous_result = result['summary']  # Update previous result
                 # Ensure each line is a complete, valid JSON object
                 response_data = json.dumps({
