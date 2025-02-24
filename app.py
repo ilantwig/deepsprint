@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
-from research_coordinator import build_research_plan, deep_sprint_topic
+from research_coordinator import build_research_plan, deep_sprint_topic, generate_final_report
 import json
 from threading import Thread
 from queue import Queue
@@ -41,20 +41,28 @@ def regenerate_plan():
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
     result_queue = Queue()
+    # Move all_results to a mutable container to avoid global variable issues
+    results_container = {'all_results': ''}
 
     def process_step(step, step_num):
         try:
             result = deep_sprint_topic(step)
-            result_queue.put({
+            result_dict = {
                 'step': step_num + 1,
                 'result': result['summary'],
                 'execution_time': result['execution_time']
-            })
+            }
+            result_queue.put(result_dict)
+            # Append to string with formatting using the container
+            results_container['all_results'] += f"\nStep {step_num + 1}:\n{result['summary']}\n"
         except Exception as e:
-            result_queue.put({
+            error_dict = {
                 'step': step_num + 1,
                 'error': str(e)
-            })
+            }
+            result_queue.put(error_dict)
+            # Append error to string using the container
+            results_container['all_results'] += f"\nStep {step_num + 1} Error:\n{str(e)}\n"
 
     def generate():
         # Start all threads
@@ -74,6 +82,11 @@ def execute_deep_sprint():
         # Wait for all threads to complete
         for thread in threads:
             thread.join()
+
+        # Use the container to access all_results
+        if results_container['all_results']:
+            final_report = generate_final_report(results_container['all_results'])
+            yield f"{json.dumps({'final_report': final_report})}\n"
 
     return Response(
         stream_with_context(generate()),

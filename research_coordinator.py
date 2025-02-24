@@ -127,6 +127,20 @@ def deep_sprint_topic(step: str) -> str:
         'summary': topic_summary_response,
         'execution_time': str(duration)
     }
-
+def generate_final_report(all_results: str) -> str:
+    """
+    Generates a final report from all the results.
     
+    Args:
+        all_results (str): All the results from the research steps  
+    
+    Returns:
+        str: The final report
+    """
+    final_report_prompt=f"""Create a detailed, verbose html report from the below content.  You must include all the information provided to you!
+    Content: {all_results}="""
+    final_report_response=default_model.invoke(final_report_prompt)
+    final_report_response=final_report_response.content.strip()
+    logger.debug(f"Final report response: {final_report_response}")
+    return final_report_response
 

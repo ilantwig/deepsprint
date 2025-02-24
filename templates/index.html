@@ -144,6 +144,21 @@
         .error {
             color: #e74c3c;
         }
+        
+        /* Add new styles for final report */
+        .final-report {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid #2ecc71;
+        }
+        
+        .final-report h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -241,24 +256,37 @@
                     results.forEach(resultStr => {
                         try {
                             const result = JSON.parse(resultStr);
-                            const resultDiv = document.createElement('div');
-                            resultDiv.className = 'result-item';
-                            resultDiv.innerHTML = `
-                                <div class="step">
-                                    <div class="step-number">${result.step}</div>
-                                    <div class="step-content">
-                                        <h3>${steps[result.step - 1]}</h3>
-                                        ${result.error ? 
-                                            `<p class="error">${result.error}</p>` :
-                                            `<p>${result.result}</p>
-                                             <p class="execution-time">Execution time: ${result.execution_time}</p>`
-                                        }
+                            if (result.final_report) {
+                                // Handle final report
+                                const finalReportDiv = document.createElement('div');
+                                finalReportDiv.className = 'final-report';
+                                finalReportDiv.innerHTML = `
+                                    <h2>Final Research Report</h2>
+                                    ${result.final_report}
+                                `;
+                                resultsContainer.appendChild(finalReportDiv);
+                                finalReportDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                            } else {
+                                // Handle regular step results
+                                const resultDiv = document.createElement('div');
+                                resultDiv.className = 'result-item';
+                                resultDiv.innerHTML = `
+                                    <div class="step">
+                                        <div class="step-number">${result.step}</div>
+                                        <div class="step-content">
+                                            <h3>${steps[result.step - 1]}</h3>
+                                            ${result.error ? 
+                                                `<p class="error">${result.error}</p>` :
+                                                `<p>${result.result}</p>
+                                                 <p class="execution-time">Execution time: ${result.execution_time}</p>`
+                                            }
+                                        </div>
                                     </div>
-                                </div>
-                            `;
-                            resultsContainer.appendChild(resultDiv);
-                            // Scroll to the new result
-                            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                                `;
+                                resultsContainer.appendChild(resultDiv);
+                                // Scroll to the new result
+                                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                            }
                         } catch (e) {
                             console.error('Error parsing result:', e);
                         }
