@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify, Response, stream_wit
 from flask_cors import CORS
 from research_coordinator import build_research_plan, deep_sprint_topic
 import json
+from threading import Thread
+from queue import Queue
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -38,31 +40,44 @@ def regenerate_plan():
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
-    
-    def generate():
-        previous_result = ""  # Track previous result for context
+    result_queue = Queue()
 
+    def process_step(step, step_num):
+        try:
+            result = deep_sprint_topic(step)
+            result_queue.put({
+                'step': step_num + 1,
+                'result': result['summary'],
+                'execution_time': result['execution_time']
+            })
+        except Exception as e:
+            result_queue.put({
+                'step': step_num + 1,
+                'error': str(e)
+            })
+
+    def generate():
+        # Start all threads
+        threads = []
         for i, step in enumerate(research_steps):
-            try:
-                result = deep_sprint_topic(step)  # Pass previous result
-                previous_result = result['summary']  # Update previous result
-                # Ensure each line is a complete, valid JSON object
-                response_data = json.dumps({
-                    'step': i + 1,
-                    'result': result['summary'],
-                    'execution_time': result['execution_time']
-                })
-                yield f"{response_data}\n"
-            except Exception as e:
-                response_data = json.dumps({
-                    'step': i + 1,
-                    'error': str(e)
-                })
-                yield f"{response_data}\n"
+            thread = Thread(target=process_step, args=(step, i))
+            thread.start()
+            threads.append(thread)
+
+        # Yield results as they become available
+        results_received = 0
+        while results_received < len(research_steps):
+            result = result_queue.get()
+            results_received += 1
+            yield f"{json.dumps(result)}\n"
+
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
 
     return Response(
         stream_with_context(generate()),
-        mimetype='application/x-ndjson'  # Changed to ndjson format
+        mimetype='application/x-ndjson'
     )
 
 if __name__ == '__main__':
