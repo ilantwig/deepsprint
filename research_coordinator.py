@@ -162,6 +162,5 @@ def generate_final_report(all_results: str) -> str:
     crewid = CrewID.get_crewid()
     output_path = f"final_report.html"
     File.write_file(crewid, "final", output_path, final_report_response)
-
     return final_report_response
 

@@ -4,6 +4,7 @@ from research_coordinator import build_research_plan, deep_sprint_topic, generat
 import json
 from threading import Thread
 from queue import Queue
+from utils.crewid import CrewID
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -39,6 +40,7 @@ def regenerate_plan():
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
+    CrewID.regenerate_crewid()
     research_steps = request.json.get('research_steps', [])
     result_queue = Queue()
     # Move all_results to a mutable container to avoid global variable issues
