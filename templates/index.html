@@ -17,6 +17,8 @@
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            box-sizing: border-box;
         }
         h1 {
             color: #2c3e50;
@@ -95,11 +97,15 @@
         .step {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 15px;
+            gap: 15px;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         .step-number {
-            min-width: 30px;
+            flex: 0 0 30px;
             height: 30px;
             background-color: #3498db;
             color: white;
@@ -107,7 +113,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 15px;
             font-weight: bold;
         }
         
@@ -123,10 +128,16 @@
             background-color: #f8f9fa;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            box-sizing: border-box;
+            margin-left: 0;
         }
         
         .step-content {
             flex: 1;
+            min-width: 0;
+            margin: 0;
+            padding: 0;
         }
         
         .step-content h3 {
@@ -147,12 +158,13 @@
         
         /* Add new styles for final report */
         .final-report {
-            margin-top: 30px;
+            margin: 30px 0;
             padding: 25px;
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             border-left: 5px solid #2ecc71;
+            margin-left: 0;
         }
         
         .final-report h2 {
@@ -178,39 +190,96 @@
             margin-top: 5px;
             display: inline-block;
         }
+        
+        .research-loader {
+            flex: 0 0 250px;
+            margin: 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .research-loader h2 {
+            font-size: 1.2em;
+            margin-top: 0;
+        }
+        
+        .generator-section {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .research-loader select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .load-research-btn {
+            background-color: #9b59b6;
+        }
+        
+        .load-research-btn:hover {
+            background-color: #8e44ad;
+        }
+        
+        /* Add new styles for layout */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: stretch;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .top-row {
+            display: flex;
+            gap: 30px;
+            width: 100%;
+        }
+        
+        #results-container {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Research Plan Generator</h1>
-        <form method="POST" id="research-form">
-            <div class="form-group">
-                <label for="research_topic">Research Topic:</label>
-                <textarea id="research_topic" name="research_topic" rows="4" required>{{ research_topic if research_topic else '' }}</textarea>
-            </div>
-            <button type="submit">Generate Plan</button>
-        </form>
         
-        <div id="loading-spinner" class="spinner"></div>
-
-        {% if research_plan %}
-        <div id="research-plan-container" class="research-plan">
-            <h2>Research Plan</h2>
-            {% for step, description in research_plan.items() %}
-                <div class="step">
-                    <div class="step-number">{{ loop.index }}</div>
-                    <p class="research-step">{{ description }}</p>
+        <div class="main-content">
+            <div class="top-row">
+                <div class="research-loader">
+                    <h2>Load Existing Research</h2>
+                    <select id="research-files">
+                        <option value="">Select a research ID...</option>
+                    </select>
+                    <button onclick="loadResearch()" class="load-research-btn">Load Research</button>
                 </div>
-            {% endfor %}
-        </div>
 
-        <div class="button-container">
-            <button onclick="regeneratePlan('{{ research_topic }}')">Regenerate Plan</button>
-            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+                <div class="generator-section">
+                    <form method="POST" id="research-form">
+                        <div class="form-group">
+                            <label for="research_topic">Research Topic:</label>
+                            <textarea id="research_topic" name="research_topic" rows="4" required>{{ research_topic if research_topic else '' }}</textarea>
+                        </div>
+                        <button type="submit">Generate Plan</button>
+                    </form>
+                    
+                    <div id="loading-spinner" class="spinner"></div>
+                    
+                    <div id="research-plan-container" class="research-plan"></div>
+                </div>
+            </div>
+            
+            <div id="results-container"></div>
         </div>
-
-        <div id="results-container"></div>
-        {% endif %}
     </div>
     <script>
         document.getElementById('research-form').addEventListener('submit', function() {
@@ -329,6 +398,82 @@
             content.classList.toggle('expanded');
             button.textContent = content.classList.contains('expanded') ? 'Show Less' : 'Show More';
         }
+
+        async function loadResearchFiles() {
+            try {
+                const response = await fetch('/list_research');
+                const data = await response.json();
+                
+                const select = document.getElementById('research-files');
+                select.innerHTML = '<option value="">Select a research ID...</option>';
+                
+                data.folders.forEach(folder => {
+                    const option = document.createElement('option');
+                    option.value = folder;
+                    option.textContent = folder;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading research files:', error);
+            }
+        }
+
+        async function loadResearch() {
+            const select = document.getElementById('research-files');
+            const crewid = select.value;
+            
+            if (!crewid) return;
+            
+            try {
+                document.getElementById('loading-spinner').style.display = 'block';
+                
+                const response = await fetch(`/load_research/${crewid}`);
+                const data = await response.json();
+                
+                // Display results
+                const resultsContainer = document.getElementById('results-container');
+                resultsContainer.innerHTML = '<h2>Research Results:</h2>';
+                
+                // Add step results
+                data.results.forEach((result, index) => {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'result-item';
+                    resultDiv.innerHTML = `
+                        <div class="step">
+                            <div class="step-number">${index + 1}</div>
+                            <div class="step-content">
+                                <div class="result-content">
+                                    ${result}
+                                </div>
+                                <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
+                            </div>
+                        </div>
+                    `;
+                    resultsContainer.appendChild(resultDiv);
+                });
+                
+                // Add final report
+                if (data.final_report) {
+                    const finalReportDiv = document.createElement('div');
+                    finalReportDiv.className = 'final-report';
+                    finalReportDiv.innerHTML = `
+                        <h2>Final Research Report</h2>
+                        <div class="result-content">
+                            ${data.final_report}
+                        </div>
+                        <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
+                    `;
+                    resultsContainer.appendChild(finalReportDiv);
+                }
+            } catch (error) {
+                console.error('Error loading research:', error);
+            } finally {
+                document.getElementById('loading-spinner').style.display = 'none';
+            }
+        }
+
+        // Load research files when the page loads
+        document.addEventListener('DOMContentLoaded', loadResearchFiles);
     </script>
 </body>
 </html> 

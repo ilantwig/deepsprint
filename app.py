@@ -5,6 +5,8 @@ import json
 from threading import Thread
 from queue import Queue
 from utils.crewid import CrewID
+from pathlib import Path
+import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -94,6 +96,52 @@ def execute_deep_sprint():
         stream_with_context(generate()),
         mimetype='application/x-ndjson'
     )
+
+@app.route('/list_research', methods=['GET'])
+def list_research():
+    try:
+        output_dir = Path('output')
+        if not output_dir.exists():
+            return jsonify({'folders': []})
+            
+        # Get all subdirectories (crew IDs)
+        folders = [f.name for f in output_dir.iterdir() if f.is_dir()]
+        return jsonify({'folders': folders})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/load_research/<crewid>', methods=['GET'])
+def load_research(crewid):
+    try:
+        output_dir = Path('output') / crewid
+        if not output_dir.exists():
+            return jsonify({'error': 'Research not found'}), 404
+            
+        research_data = {
+            'steps': [],
+            'results': [],
+            'final_report': ''
+        }
+        
+        # Load step reports
+        step = 0
+        while True:
+            step_file = output_dir / f"{step}_step_report.html"
+            if not step_file.exists():
+                break
+            with open(step_file, 'r', encoding='utf-8') as f:
+                research_data['results'].append(f.read())
+            step += 1
+            
+        # Load final report
+        final_report_file = output_dir / "final_report.html"
+        if final_report_file.exists():
+            with open(final_report_file, 'r', encoding='utf-8') as f:
+                research_data['final_report'] = f.read()
+                
+        return jsonify(research_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
