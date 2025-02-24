@@ -12,7 +12,7 @@ DeepSprint is an open-source deep research tool that enables quick and efficient
 
 ## Prerequisites
 
-- Python 3.x
+- Python 3.11
 - pip (Python package installer)
 - LM Studio (optional, for local model usage)
 

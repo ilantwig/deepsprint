@@ -30,8 +30,6 @@ class Config:
         APP_HOME = Path(os.getenv("APP_HOME", Path(__file__).parent.parent))
         DATA_DIR = APP_HOME / "data"
         OUTPUT_DIR = APP_HOME / "output"
-        LOGS_DIR = APP_HOME / "logs"
-        AGENT_LOGS_DIR = LOGS_DIR / "agents"
         TOOLS_FOLDER = APP_HOME / "lib/capabilities"
     
     USE_THREADS=False #determines if dimensions analysis will run in parallel or not.

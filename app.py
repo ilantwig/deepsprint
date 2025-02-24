@@ -133,11 +133,23 @@ def load_research(crewid):
                 research_data['results'].append(f.read())
             step += 1
             
-        # Load final report
+        # Load final reports
+        final_report = []
+        
+        # Try loading regular final report
         final_report_file = output_dir / "final_report.html"
         if final_report_file.exists():
             with open(final_report_file, 'r', encoding='utf-8') as f:
-                research_data['final_report'] = f.read()
+                final_report.append(f.read())
+                
+        # Try loading fina final report
+        fina_final_report_file = output_dir / "fina_final_report.html"
+        if fina_final_report_file.exists():
+            with open(fina_final_report_file, 'r', encoding='utf-8') as f:
+                final_report.append(f.read())
+        
+        # Combine final reports if both exist
+        research_data['final_report'] = '<br><br>'.join(final_report)
                 
         return jsonify(research_data)
     except Exception as e:
