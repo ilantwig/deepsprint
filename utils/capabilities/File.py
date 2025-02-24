@@ -25,7 +25,6 @@ class File:
         cls.CREWID_OUTPUT_DIR = Path.joinpath(cls.OUTPUT_DIR, crewid)
         cls.CREWID_PROMPTS_DIR = Path.joinpath(cls.PROMPTS_DIR, crewid)
         logger.debug(f"CREWID_DIR: {cls.CREWID_OUTPUT_DIR}")
-        logger.debug(f"CREWID_CREWS_DIR: {cls.CREWID_CREWS_DIR}")
 
         cls.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         cls.CREWID_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,14 +46,12 @@ class File:
     #         return f"Error reading file '{filename}': {str(e)}"
 
     @staticmethod
-    def write_file(_filename: str, _content: str) -> str:
+    def write_file(crew_id: str, step_number: str, filename: str, _content: str) -> str:
         """
         Write content to file in output directory. Handles html, txt, md, and json files.
         If file exists, append a counter to filename.
         """
-        logger.debug(f"Starting write_file with filename: {_filename}")
-        crew_id, dimension_number,filename = _filename.split('|')
-        logger.debug(f"Split filename into crew_id: {crew_id}, dimension#:{dimension_number} and filename: {filename}")
+        logger.debug(f"Starting write_file with filename: {filename}")
 
         File._ensure_directories(crew_id)
 
@@ -62,7 +59,7 @@ class File:
         name, ext = os.path.splitext(filename)
         counter = 0
 
-        file_path = Path.joinpath(File.CREWID_OUTPUT_DIR, f"dim{dimension_number}_{filename}")
+        file_path = Path.joinpath(File.CREWID_OUTPUT_DIR, f"{step_number}_{filename}")
 
         logger.debug(f"Starting write_file with filename: {file_path}")
         content=""

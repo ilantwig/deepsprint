@@ -46,7 +46,7 @@ def execute_deep_sprint():
 
     def process_step(step, step_num):
         try:
-            result = deep_sprint_topic(step)
+            result = deep_sprint_topic(step, step_num)
             result_dict = {
                 'step': step_num + 1,
                 'result': result['summary'],
