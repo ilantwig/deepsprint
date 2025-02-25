@@ -1,10 +1,11 @@
 <picture>
   <source srcset="./static/rtx-compare.png">
+   <img src="./static/rtx-compare.png"  width="full">
 </picture>
 
 # DeepSprint
 
-DeepSprint is an open-source deep research tool that enables quick and efficient research capabilities through AI-powered analysis. Developed by Ilan Twig, CTO and Co-founder of [Navan](https://www.navan.com).
+DeepSprint supercharges your research with AI, helping you dive deep into any topic in record time. Born from my own need to accelerate research workflows at [Navan](https://www.navan.com), I built this tool to make thorough research accessible to everyone.
 
 # Quick start
 With pip (Python<=3.12):
@@ -17,7 +18,7 @@ pip install -r requirements.txt
 
 Add your API keys for the provider you want to use to your `.env` file.
 
-```bash
+```env
 OPENAI_API_KEY=
 SERPER_API_KEY=
 or
@@ -113,8 +114,6 @@ deepsprint/
 - `OPENAI_MODEL`: Specify which OpenAI model to use (e.g., "gpt-4", "gpt-3.5-turbo")
 - `LM_STUDIO_BASE_URL`: The endpoint URL for your local LM Studio instance
 - Additional configuration options can be found in `.env.template`
-
-
 
 ## Contributing
 
