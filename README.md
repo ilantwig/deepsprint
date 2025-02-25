@@ -1,6 +1,32 @@
+<picture>
+  <source srcset="./static/rtx-compare.png">
+</picture>
+
 # DeepSprint
 
 DeepSprint is an open-source deep research tool that enables quick and efficient research capabilities through AI-powered analysis. Developed by Ilan Twig, CTO and Co-founder of [Navan](https://www.navan.com).
+
+# Quick start
+With pip (Python<=3.12):
+
+```bash
+git clone https://github.com/ilantwig/deepsprint.git
+cd deepsprint
+pip install -r requirements.txt
+```
+
+Add your API keys for the provider you want to use to your `.env` file.
+
+```bash
+OPENAI_API_KEY=
+SERPER_API_KEY=
+or
+LM_STUDIO_URL=
+```
+
+```bash
+python app.py
+```
 
 ## Features
 
@@ -88,13 +114,15 @@ deepsprint/
 - `LM_STUDIO_BASE_URL`: The endpoint URL for your local LM Studio instance
 - Additional configuration options can be found in `.env.template`
 
+
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-[Insert your chosen license information here]
+MIT License
 
 ## Support
 
