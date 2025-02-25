@@ -1,4 +1,5 @@
 from datetime import date, datetime
+import re
 
 from utils.config import default_model
 from utils.capabilities.Search import Search
@@ -39,15 +40,15 @@ I want a detailed report on all Israeli hostages held by Hamas in Gaza:
 (7) Find any news articles or reports from reputable sources that provide updates on the situation.
 
 Example of a topic and a suggested research plan:
-Create a detailed profile on the startup mindtrip.ai by:
-(1) Find general information about mindtrip.ai.
-(2) Find news articles about mindtrip.ai.
-(3) Find the funding history of mindtrip.ai.
-(4) Find the profiles of the founders of mindtrip.ai.
-(5) Find information about the products or services offered by mindtrip.ai.
-(6) Find reviews or testimonials about mindtrip.ai.
-(7) Find information about the target market and competitors of mindtrip.ai.
-(8) Find any awards or recognition received by mindtrip.ai.
+Create a detailed profile on the startup mindcool.ai by:
+(1) Find general information about mindcool.ai.
+(2) Find news articles about mindcool.ai.
+(3) Find the funding history of mindcool.ai.
+(4) Find the profiles of the founders of mindcool.ai.
+(5) Find information about the products or services offered by mindcool.ai.
+(6) Find reviews or testimonials about mindcool.ai.
+(7) Find information about the target market and competitors of mindcool.ai.
+(8) Find any awards or recognition received by mindcool.ai.
 
 Example of a topic and a suggested research plan:
 Create a detailed profile on Ilan Twig by:
@@ -125,7 +126,75 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
     topic_summary_response=default_model.invoke(topic_summary_prompot)
     topic_summary_response=topic_summary_response.content.strip()
     topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
-    logger.debug(f"Topic summary response: {topic_summary_response}")
+    
+    # Define the CSS style
+    css_style = """<style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      margin: 30px;
+      background-color: #f8f8f8;
+      color: #333;
+    }
+
+    h1, h2, h3 {
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+
+    h1 {
+      font-size: 20px;
+      border-bottom: 3px solid #3498db;
+      padding-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    h2 {
+      font-size: 18px;
+      color: #34495e;
+    }
+
+    h3 {
+      font-size: 16px;
+      color: #2980b9;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      border-radius: 5px;
+    }
+
+    th, td {
+      border: 1px solid #e0e0e0;
+      padding: 12px 15px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    tr:hover {
+      background-color: #e8f5ff;
+    }
+    </style>"""
+
+    # Remove any existing style tags
+    topic_summary_response = re.sub(r'<style>.*?</style>', '', topic_summary_response, flags=re.DOTALL)
+    
+    # Add our custom style at the beginning of the HTML content
+    topic_summary_response = css_style + topic_summary_response
 
     # Save individual step report
     from utils.capabilities.File import File

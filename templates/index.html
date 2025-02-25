@@ -136,9 +136,10 @@
         }
         
         .execution-time {
-            font-size: 0.9em;
+            font-size: 0.8em;
             color: #666;
-            margin-top: 10px;
+            display: inline-block;
+            margin-left: 15px;
         }
         
         .error {
@@ -175,8 +176,12 @@
             color: #3498db;
             cursor: pointer;
             text-decoration: underline;
-            margin-top: 5px;
+            font-size: 0.8em;
             display: inline-block;
+        }
+
+        .meta-info {
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -296,14 +301,16 @@
                                     <div class="step">
                                         <div class="step-number">${result.step}</div>
                                         <div class="step-content">
-                                            <h3>${steps[result.step - 1]}</h3>
+                                            <p>${steps[result.step - 1]}</p>
                                             ${result.error ? 
                                                 `<p class="error">${result.error}</p>` :
                                                 `<div class="result-content">
                                                     <p>${result.result}</p>
                                                  </div>
-                                                 <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
-                                                 <p class="execution-time">Execution time: ${result.execution_time}</p>`
+                                                 <div class="meta-info">
+                                                    <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
+                                                    <span class="execution-time">Execution time: ${result.execution_time}</span>
+                                                 </div>`
                                             }
                                         </div>
                                     </div>
@@ -325,7 +332,7 @@
         }
 
         function toggleContent(button) {
-            const content = button.previousElementSibling;
+            const content = button.closest('.result-item, .final-report').querySelector('.result-content');
             content.classList.toggle('expanded');
             button.textContent = content.classList.contains('expanded') ? 'Show Less' : 'Show More';
         }
