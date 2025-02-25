@@ -33,10 +33,3 @@ class CrewID:
                 CrewID.crewid = str(random.randint(1000, 9999))
                 print(f"\n\n\n**************************************\ncrewid.py: Generated Crew ID: {CrewID.crewid}\n*******************************\n\n")
         return CrewID.crewid
-    
-    @staticmethod
-    def regenerate_crewid() -> str:
-        with CrewID._lock:
-            CrewID.crewid = str(random.randint(1000, 9999))
-            print(f"\n\n\n**************************************\ncrewid.py: Regenerated Crew ID: {CrewID.crewid}\n*******************************\n\n")
-        return CrewID.crewid

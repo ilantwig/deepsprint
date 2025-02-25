@@ -4,9 +4,6 @@ from research_coordinator import build_research_plan, deep_sprint_topic, generat
 import json
 from threading import Thread
 from queue import Queue
-from utils.crewid import CrewID
-from pathlib import Path
-import os
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -42,7 +39,6 @@ def regenerate_plan():
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
-    CrewID.regenerate_crewid()
     research_steps = request.json.get('research_steps', [])
     result_queue = Queue()
     # Move all_results to a mutable container to avoid global variable issues
@@ -110,50 +106,50 @@ def list_research():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/load_research/<crewid>', methods=['GET'])
-def load_research(crewid):
-    try:
-        output_dir = Path('output') / crewid
-        if not output_dir.exists():
-            return jsonify({'error': 'Research not found'}), 404
+# @app.route('/load_research/<crewid>', methods=['GET'])
+# def load_research(crewid):
+#     try:
+#         output_dir = Path('output') / crewid
+#         if not output_dir.exists():
+#             return jsonify({'error': 'Research not found'}), 404
             
-        research_data = {
-            'steps': [],
-            'results': [],
-            'final_report': ''
-        }
+#         research_data = {
+#             'steps': [],
+#             'results': [],
+#             'final_report': ''
+#         }
         
-        # Load step reports
-        step = 0
-        while True:
-            step_file = output_dir / f"{step}_step_report.html"
-            if not step_file.exists():
-                break
-            with open(step_file, 'r', encoding='utf-8') as f:
-                research_data['results'].append(f.read())
-            step += 1
+#         # Load step reports
+#         step = 0
+#         while True:
+#             step_file = output_dir / f"{step}_step_report.html"
+#             if not step_file.exists():
+#                 break
+#             with open(step_file, 'r', encoding='utf-8') as f:
+#                 research_data['results'].append(f.read())
+#             step += 1
             
-        # Load final reports
-        final_report = []
+#         # Load final reports
+#         final_report = []
         
-        # Try loading regular final report
-        final_report_file = output_dir / "final_report.html"
-        if final_report_file.exists():
-            with open(final_report_file, 'r', encoding='utf-8') as f:
-                final_report.append(f.read())
+#         # Try loading regular final report
+#         final_report_file = output_dir / "final_report.html"
+#         if final_report_file.exists():
+#             with open(final_report_file, 'r', encoding='utf-8') as f:
+#                 final_report.append(f.read())
                 
-        # Try loading fina final report
-        fina_final_report_file = output_dir / "fina_final_report.html"
-        if fina_final_report_file.exists():
-            with open(fina_final_report_file, 'r', encoding='utf-8') as f:
-                final_report.append(f.read())
+#         # Try loading fina final report
+#         fina_final_report_file = output_dir / "fina_final_report.html"
+#         if fina_final_report_file.exists():
+#             with open(fina_final_report_file, 'r', encoding='utf-8') as f:
+#                 final_report.append(f.read())
         
-        # Combine final reports if both exist
-        research_data['final_report'] = '<br><br>'.join(final_report)
+#         # Combine final reports if both exist
+#         research_data['final_report'] = '<br><br>'.join(final_report)
                 
-        return jsonify(research_data)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         return jsonify(research_data)
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
