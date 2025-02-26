@@ -2,6 +2,7 @@ from datetime import date, datetime
 import re
 
 from utils.config import default_model
+from utils import get_report_css_style
 from utils.capabilities.Search import Search
 from utils.capabilities.Browser import Browser
 import logging
@@ -128,67 +129,7 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
     topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
     
     # Define the CSS style
-    css_style = """<style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      margin: 30px;
-      background-color: #f8f8f8;
-      color: #333;
-    }
-
-    h1, h2, h3 {
-      margin-bottom: 15px;
-      color: #2c3e50;
-    }
-
-    h1 {
-      font-size: 20px;
-      border-bottom: 3px solid #3498db;
-      padding-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    h2 {
-      font-size: 18px;
-      color: #34495e;
-    }
-
-    h3 {
-      font-size: 16px;
-      color: #2980b9;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      background-color: white;
-      border-radius: 5px;
-    }
-
-    th, td {
-      border: 1px solid #e0e0e0;
-      padding: 12px 15px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #3498db;
-      color: white;
-      font-weight: 600;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f2f2f2;
-    }
-
-    tr:hover {
-      background-color: #e8f5ff;
-    }
-    </style>"""
+    css_style = get_report_css_style()
 
     # Remove any existing style tags
     topic_summary_response = re.sub(r'<style>.*?</style>', '', topic_summary_response, flags=re.DOTALL)
