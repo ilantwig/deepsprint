@@ -14,12 +14,28 @@ from threading import Thread
 from queue import Queue
 from argparse import ArgumentParser
 from config import test_mode, set_test_mode
+from os import getenv
+from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+
+load_dotenv()
+
+def get_model_status():
+    openai_model = getenv('OPENAI_MODEL_NAME')
+    openai_key = getenv('OPENAI_API_KEY')
+    lm_studio_url = getenv('LM_STUDIO_URL')
+    
+    if openai_model and openai_key and openai_key.startswith('sk-'):
+        return f"Using {openai_model}"
+    elif lm_studio_url:
+        return "Using LM Studio"
+    else:
+        return "No model configured"
 
 @app.after_request
 def add_header(response):
@@ -36,6 +52,8 @@ def index():
     print(f"test_mode: {test_mode}")
     research_plan = None
     research_results = None
+    model_status = get_model_status()
+    
     if request.method == 'POST':
         research_topic = request.form['research_topic']
         research_plan = build_research_plan(research_topic)
@@ -43,11 +61,13 @@ def index():
                              research_plan=research_plan, 
                              research_topic=research_topic,
                              research_results=research_results,
-                             test_mode=test_mode)
+                             test_mode=test_mode,
+                             model_status=model_status)
     return render_template('index.html', 
                          research_plan=research_plan,
                          research_results=research_results,
-                         test_mode=test_mode)
+                         test_mode=test_mode,
+                         model_status=model_status)
 
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():

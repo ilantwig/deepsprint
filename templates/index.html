@@ -293,6 +293,20 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        .model-badge {
+            display: inline-block;
+            background-color: #34495e;
+            color: white;
+            font-size: 0.4em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            vertical-align: middle;
+            margin-left: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
@@ -302,6 +316,7 @@
             {% if test_mode %}
             <span class="test-mode-badge">Test Mode</span>
             {% endif %}
+            <span class="model-badge">{{ model_status }}</span>
         </h1>
         <form method="POST" id="research-form">
             <div class="form-group">

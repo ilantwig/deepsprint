@@ -35,7 +35,7 @@ python app.py
 
 # Quick start - using LM Studio models
 ```env
-LM_STUDIO_BASE_URL=
+LM_STUDIO_BASE_URL="http://localhost:1234/v1"
 ```
 Make sure you started LM Studio server and it's running.
 <picture>
