@@ -528,6 +528,17 @@
         async function executeDeepSprint() {
             document.getElementById('loading-spinner').style.display = 'block';
             
+            // Get the CURRENT research steps from the page
+            const currentSteps = Array.from(document.querySelectorAll('#research-plan-container .research-step'))
+                .map(step => step.textContent.trim());
+            
+            // If no steps are found, return early
+            if (currentSteps.length === 0) {
+                document.getElementById('loading-spinner').style.display = 'none';
+                console.error('No research steps found');
+                return;
+            }
+
             // Create results container if it doesn't exist
             let resultsContainer = document.getElementById('results-container');
             if (!resultsContainer) {
@@ -536,45 +547,21 @@
                 document.querySelector('.container').appendChild(resultsContainer);
             }
             
-            // Create tabs container if it doesn't exist
-            let tabsContainer = resultsContainer.querySelector('.tabs');
-            if (!tabsContainer) {
-                tabsContainer = document.createElement('div');
-                tabsContainer.className = 'tabs';
-                resultsContainer.appendChild(tabsContainer);
-            }
-            
-            // Create tab buttons container if it doesn't exist
-            let tabButtons = tabsContainer.querySelector('.tab-buttons');
-            if (!tabButtons) {
-                tabButtons = document.createElement('div');
-                tabButtons.className = 'tab-buttons';
-                tabButtons.id = 'tab-buttons';
-                tabsContainer.appendChild(tabButtons);
-            }
-            
-            // Create tab contents container if it doesn't exist
-            let tabContents = document.getElementById('tab-contents');
-            if (!tabContents) {
-                tabContents = document.createElement('div');
-                tabContents.id = 'tab-contents';
-                resultsContainer.appendChild(tabContents);
-            }
-            
-            // Clear existing content
-            tabButtons.innerHTML = '';
-            tabContents.innerHTML = '';
-            
-            const steps = Array.from(document.querySelectorAll('.research-step'))
-                .map(step => step.textContent.trim());
-            
+            // Clear existing results
+            resultsContainer.innerHTML = `
+                <div class="tabs">
+                    <div class="tab-buttons" id="tab-buttons"></div>
+                </div>
+                <div id="tab-contents"></div>
+            `;
+
             try {
                 const response = await fetch('/execute_deep_sprint', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ research_steps: steps })
+                    body: JSON.stringify({ research_steps: currentSteps })
                 });
 
                 if (!response.ok) {
@@ -600,7 +587,7 @@
                                 finalTabButton.className = 'tab-button';
                                 finalTabButton.textContent = 'Final';
                                 finalTabButton.onclick = () => switchTab('final-report');
-                                tabButtons.appendChild(finalTabButton);
+                                resultsContainer.querySelector('.tab-buttons').appendChild(finalTabButton);
 
                                 const finalTabContent = document.createElement('div');
                                 finalTabContent.className = 'tab-content';
@@ -620,7 +607,7 @@
                                         </div>
                                     </div>
                                 `;
-                                tabContents.appendChild(finalTabContent);
+                                resultsContainer.querySelector('#tab-contents').appendChild(finalTabContent);
                                 switchTab('final-report');
                             } else {
                                 // Create step tab if it doesn't exist
@@ -630,12 +617,12 @@
                                     tabButton.className = 'tab-button';
                                     tabButton.textContent = result.step;
                                     tabButton.onclick = () => switchTab(tabId);
-                                    tabButtons.appendChild(tabButton);
+                                    resultsContainer.querySelector('.tab-buttons').appendChild(tabButton);
 
                                     const tabContent = document.createElement('div');
                                     tabContent.className = 'tab-content';
                                     tabContent.id = tabId;
-                                    tabContents.appendChild(tabContent);
+                                    resultsContainer.querySelector('#tab-contents').appendChild(tabContent);
                                 }
 
                                 // Add content to the step tab
@@ -644,7 +631,7 @@
                                 resultDiv.className = 'result-item';
                                 resultDiv.innerHTML = `
                                     <div class="step-content">
-                                        <h3>${steps[result.step - 1]}</h3>
+                                        <h3>${currentSteps[result.step - 1]}</h3>
                                         ${result.error ? 
                                             `<p class="error">${result.error}</p>` :
                                             `<div class="result-content">
@@ -665,7 +652,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                tabContents.innerHTML = '<p class="error">Error processing research steps</p>';
+                resultsContainer.querySelector('#tab-contents').innerHTML = '<p class="error">Error processing research steps</p>';
             } finally {
                 document.getElementById('loading-spinner').style.display = 'none';
             }
