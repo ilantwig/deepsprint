@@ -28,7 +28,7 @@ LM_STUDIO_URL=
 python app.py
 ```
 <picture>
-   <img src="./static/rtx-compare.png"  width="full">
+   <img src="./static/results.png"  width="full">
 </picture>
 
 ## Running in test mode
