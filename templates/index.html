@@ -154,6 +154,27 @@
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             border-left: 5px solid #2ecc71;
+            position: relative;
+        }
+        
+        .download-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #3498db;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .download-button:hover {
+            background-color: #2980b9;
         }
         
         .final-report h2 {
@@ -397,6 +418,13 @@
                                 finalTabContent.innerHTML = `
                                     <div class="final-report">
                                         <h2>Final Research Report</h2>
+                                        <button onclick="downloadReports()" class="download-button">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                            </svg>
+                                            Download Reports
+                                        </button>
                                         <div class="result-content">
                                             ${result.final_report}
                                         </div>
@@ -476,6 +504,44 @@
                 selectedTab.classList.add('active');
                 selectedButton.classList.add('active');
             }
+        }
+
+        function downloadReports() {
+            // Collect all results
+            let content = "";
+            
+            // Add step results
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                if (tab.id !== 'final-report') {
+                    const stepNumber = tab.id.replace('step-', '');
+                    tab.querySelectorAll('.result-item').forEach(item => {
+                        content += `\n\n=== Step ${stepNumber} ===\n`;
+                        content += item.querySelector('h3').textContent + '\n\n';
+                        const resultContent = item.querySelector('.result-content p');
+                        if (resultContent) {
+                            content += resultContent.textContent;
+                        }
+                    });
+                }
+            });
+            
+            // Add final report
+            const finalReport = document.querySelector('#final-report .result-content');
+            if (finalReport) {
+                content += '\n\n=== Final Report ===\n\n';
+                content += finalReport.textContent;
+            }
+            
+            // Create and trigger download
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'research-report.txt';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
     </script>
 </body>
