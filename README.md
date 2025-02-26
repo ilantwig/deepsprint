@@ -1,9 +1,9 @@
 <picture>
     <img src="./static/rtx-compare.png" width="100%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
-[![GitHub](https://img.shields.io/github/followers/ilantwig?label=Follow&style=social)](https://github.com/ilantwig) &nbsp;&nbsp;
-[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ilantwig) &nbsp;&nbsp;
-[![Twitter](https://img.shields.io/twitter/follow/itwig?style=social)](https://twitter.com/itwig)
+[![GitHub followers](https://img.shields.io/github/followers/ilantwig?label=Follow)](https://github.com/ilantwig)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ilantwig)
+[![Twitter](https://img.shields.io/twitter/follow/itwig)](https://twitter.com/itwig)
 
 # DeepSprint
 
