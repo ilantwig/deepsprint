@@ -1,5 +1,4 @@
 <picture>
-  <source srcset="./static/rtx-compare.png">
    <img src="./static/rtx-compare.png"  width="full">
 </picture>
 
@@ -29,13 +28,21 @@ LM_STUDIO_URL=
 python app.py
 ```
 
+## Running in test mode
+
+```bash
+python app.py --test
+```
+<picture>
+   <img src="./static/rtx-compare.png"  width="full">
+</picture>
+
 ## Features
 
 - Rapid deep research capabilities
 - Support for both OpenAI and local LLM models via LM Studio
 - Flexible API integration with SerperAPI for web searches
 - Flask-based server architecture
-- Customizable prompts and templates
 
 ## Prerequisites
 
@@ -73,8 +80,7 @@ python app.py
 
 ## Project Structure
 
-```
-deepsprint/
+```deepsprint/
 ├── _pycache_/        # Python cache directory
 ├── output/           # Output files directory
 ├── prompts/          # Prompt templates
