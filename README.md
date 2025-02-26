@@ -1,5 +1,5 @@
 <picture>
-    <img src="./static/rtx-compare.png" width="100%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <img src="./static/rtx-compare.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 [![GitHub followers](https://img.shields.io/github/followers/ilantwig?style=social)](https://github.com/ilantwig)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=social&logo=linkedin)](https://www.linkedin.com/in/ilantwig)
@@ -10,7 +10,7 @@
 DeepSprint supercharges your research with AI, helping you dive deep into any topic in record time. Born from my own need to accelerate research workflows at [Navan](https://www.navan.com), I built this tool to make thorough research accessible to everyone.
 
 # Quick start
-Requires Python<=3.12!!
+Requires Python>=3.10 and <=3.12!!
 
 ```bash
 git clone https://github.com/ilantwig/deepsprint.git
