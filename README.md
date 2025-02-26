@@ -1,5 +1,5 @@
 <picture>
-    <img src="./static/rtx-compare.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <img src="./static/rtx-compare.png" width="100%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 # DeepSprint
