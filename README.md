@@ -1,9 +1,9 @@
-<div style="display: flex; justify-content: space-between; gap: 20px;">
+<div style="display: flex; justify-content: space-between; gap: 5px;">
     <picture>
-       <img src="./static/rtx-compare.png" width="50%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+       <img src="./static/rtx-compare.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
     </picture>
     <picture>
-       <img src="./static/results.png" width="50%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+       <img src="./static/results.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
     </picture>
 </div>
 
@@ -31,17 +31,10 @@ For permenant configuration, add your API keys for the provider you want to use 
 OPENAI_API_KEY=
 OPENAI_MODEL_NAME=
 SERPER_API_KEY=
-```
-
-```bash
-python app.py
-```
-
-
-# Quick start - using LM Studio models
-```env
 LM_STUDIO_BASE_URL="http://localhost:1234/v1"
 ```
+
+# Using LM Studio models
 Make sure you started LM Studio server and it's running.
 <picture>
    <img src="./static/lm-studio-server-mac.jpg"   style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
