@@ -1,0 +1,7 @@
+.social-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+} 

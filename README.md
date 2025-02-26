@@ -1,11 +1,6 @@
-<div style="display: flex; justify-content: space-between; gap: 5px;">
-    <picture>
-       <img src="./static/rtx-compare.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-    </picture>
-    <picture>
-       <img src="./static/results.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-    </picture>
-</div>
+<picture>
+    <img src="./static/rtx-compare.png" width="45%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</picture>
 
 # DeepSprint
 
