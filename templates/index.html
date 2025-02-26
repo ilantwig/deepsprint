@@ -307,9 +307,104 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
+        /* Add these new styles */
+        .settings-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #34495e;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .settings-content {
+            position: relative;
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+
+        .close-button {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .settings-form label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .settings-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
+    <button onclick="openSettings()" class="settings-button">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M10 13a3 3 0 100-6 3 3 0 000 6z"/>
+            <path fill-rule="evenodd" d="M9.957 2.886a.5.5 0 01.086 0l1.196.218a.5.5 0 01.404.404l.218 1.196a.5.5 0 00.363.363l1.196.218a.5.5 0 01.404.404l.218 1.196a.5.5 0 010 .086l-.218 1.196a.5.5 0 01-.404.404l-1.196.218a.5.5 0 00-.363.363l-.218 1.196a.5.5 0 01-.404.404l-1.196.218a.5.5 0 01-.086 0l-1.196-.218a.5.5 0 01-.404-.404l-.218-1.196a.5.5 0 00-.363-.363l-1.196-.218a.5.5 0 01-.404-.404l-.218-1.196a.5.5 0 010-.086l.218-1.196a.5.5 0 01.404-.404l1.196-.218a.5.5 0 00.363-.363l.218-1.196a.5.5 0 01.404-.404l1.196-.218z"/>
+        </svg>
+        Settings
+    </button>
+
+    <div id="settings-modal" class="settings-modal">
+        <div class="settings-content">
+            <span class="close-button" onclick="closeSettings()">&times;</span>
+            <h2>Settings</h2>
+            <form id="settings-form" class="settings-form">
+                <div>
+                    <label for="openai_api_key">OpenAI API Key:</label>
+                    <input type="password" id="openai_api_key" name="openai_api_key">
+                </div>
+                <div>
+                    <label for="openai_model_name">OpenAI Model Name:</label>
+                    <input type="text" id="openai_model_name" name="openai_model_name">
+                </div>
+                <div>
+                    <label for="lm_studio_url">LM Studio URL:</label>
+                    <input type="text" id="lm_studio_url" name="lm_studio_url">
+                </div>
+                <div>
+                    <label for="serper_api_key">Serper API Key:</label>
+                    <input type="password" id="serper_api_key" name="serper_api_key">
+                </div>
+                <button type="submit">Save Settings</button>
+            </form>
+        </div>
+    </div>
+
     <div class="container">
         <h1>
             Research Plan Generator
@@ -355,6 +450,18 @@
         {% endif %}
     </div>
     <script>
+        function checkRequiredSettings() {
+            fetch('/check_settings')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.settings_valid) {
+                        openSettings();
+                    }
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', checkRequiredSettings);
+
         document.getElementById('research-form').addEventListener('submit', function() {
             document.getElementById('loading-spinner').style.display = 'block';
         });
@@ -557,6 +664,55 @@
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').style.display = 'block';
+            // Load current settings
+            fetch('/settings')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('openai_api_key').value = data.openai_api_key;
+                    document.getElementById('openai_model_name').value = data.openai_model_name;
+                    document.getElementById('lm_studio_url').value = data.lm_studio_url;
+                    document.getElementById('serper_api_key').value = data.serper_api_key;
+                });
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        document.getElementById('settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = {
+                openai_api_key: document.getElementById('openai_api_key').value,
+                openai_model_name: document.getElementById('openai_model_name').value,
+                lm_studio_url: document.getElementById('lm_studio_url').value,
+                serper_api_key: document.getElementById('serper_api_key').value
+            };
+
+            fetch('/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    closeSettings();
+                    location.reload(); // Reload to update the model status badge
+                }
+            });
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('settings-modal')) {
+                closeSettings();
+            }
         }
     </script>
 </body>

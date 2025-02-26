@@ -5,16 +5,34 @@ from langchain_openai import ChatOpenAI
 
 class ModelConfig:
     DEFAULT_TEMPERATURE = 0.7
-    open_ai_model=os.getenv("OPENAI_MODEL_NAME")
-    lm_studio_base_url=os.getenv("LM_STUDIO_URL")
+    
     @classmethod
     def get_model(cls, model_name=None, temperature=DEFAULT_TEMPERATURE):
-        if os.getenv("OPENAI_API_KEY"):
-            print(f"config.py:: Using OpenAI model: {ModelConfig.open_ai_model}")
-            return ChatOpenAI(model_name=model_name or ModelConfig.open_ai_model)
+        # Get latest environment variables but don't require them
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        openai_model = os.getenv("OPENAI_MODEL_NAME", "gpt-3.5-turbo")
+        lm_studio_url = os.getenv("LM_STUDIO_URL")
+        
+        # Return None if no configuration is available yet
+        if not any([openai_api_key, lm_studio_url]):
+            return None
+        
+        if openai_api_key and openai_api_key.startswith('sk-'):
+            print(f"config.py:: Using OpenAI model: {openai_model}")
+            return ChatOpenAI(
+                model_name=model_name or openai_model,
+                temperature=temperature
+            )
+        elif lm_studio_url:
+            print(f"Using LLM Studio model via: {lm_studio_url}")
+            return ChatOpenAI(
+                base_url=lm_studio_url,
+                api_key="not-needed",  # LM Studio doesn't check the API key
+                model_name="local-model",  # Use a placeholder model name
+                temperature=temperature
+            )
         else:
-            print(f"Using LLM Studio model via: {ModelConfig.lm_studio_base_url}")
-            return ChatOpenAI(base_url=os.getenv("LM_STUDIO_URL"), api_key="lm-studio")
+            raise ValueError("No valid model configuration found. Please set either OPENAI_API_KEY or LM_STUDIO_URL")
     
 
 

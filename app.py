@@ -15,7 +15,8 @@ from queue import Queue
 from argparse import ArgumentParser
 from config import test_mode, set_test_mode
 from os import getenv
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
+import os  # Add this import for os.environ
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -199,6 +200,57 @@ def list_research():
         return jsonify({'folders': folders})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/settings', methods=['GET'])
+def get_settings():
+    return jsonify({
+        'openai_api_key': getenv('OPENAI_API_KEY', ''),
+        'openai_model_name': getenv('OPENAI_MODEL_NAME', ''),
+        'lm_studio_url': getenv('LM_STUDIO_URL', ''),
+        'serper_api_key': getenv('SERPER_API_KEY', '')
+    })
+
+@app.route('/settings', methods=['POST'])
+def update_settings():
+    data = request.json
+    env_path = '.env'
+    
+    # Update environment variables
+    if 'openai_api_key' in data:
+        set_key(env_path, 'OPENAI_API_KEY', data['openai_api_key'])
+        os.environ['OPENAI_API_KEY'] = data['openai_api_key']
+    
+    if 'openai_model_name' in data:
+        set_key(env_path, 'OPENAI_MODEL_NAME', data['openai_model_name'])
+        os.environ['OPENAI_MODEL_NAME'] = data['openai_model_name']
+    
+    if 'lm_studio_url' in data:
+        set_key(env_path, 'LM_STUDIO_URL', data['lm_studio_url'])
+        os.environ['LM_STUDIO_URL'] = data['lm_studio_url']
+    
+    if 'serper_api_key' in data:
+        set_key(env_path, 'SERPER_API_KEY', data['serper_api_key'])
+        os.environ['SERPER_API_KEY'] = data['serper_api_key']
+    
+    return jsonify({'status': 'success'})
+
+@app.route('/check_settings')
+def check_settings():
+    serper_key = getenv('SERPER_API_KEY', '')
+    openai_key = getenv('OPENAI_API_KEY', '')
+    openai_model = getenv('OPENAI_MODEL_NAME', '')
+    lm_studio_url = getenv('LM_STUDIO_URL', '')
+    
+    # Check if we have Serper API key AND either (OpenAI credentials OR LM Studio URL)
+    settings_valid = (
+        serper_key and 
+        (
+            (openai_key and openai_model) or 
+            lm_studio_url
+        )
+    )
+    
+    return jsonify({'settings_valid': settings_valid})
 
 if __name__ == '__main__':
     parser = ArgumentParser()
