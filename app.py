@@ -45,30 +45,9 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
-    global test_mode
-    # Import test_mode again to get the latest value
-    from config import test_mode
-    print(f"test_mode: {test_mode}")
-    research_plan = None
-    research_results = None
-    model_status = get_model_status()
-    
-    if request.method == 'POST':
-        research_topic = request.form['research_topic']
-        research_plan = build_research_plan(research_topic)
-        return render_template('index.html', 
-                             research_plan=research_plan, 
-                             research_topic=research_topic,
-                             research_results=research_results,
-                             test_mode=test_mode,
-                             model_status=model_status)
-    return render_template('index.html', 
-                         research_plan=research_plan,
-                         research_results=research_results,
-                         test_mode=test_mode,
-                         model_status=model_status)
+    return render_template('index.html')
 
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():

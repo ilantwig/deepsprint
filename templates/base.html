@@ -1,19 +1,35 @@
-<div class="social-buttons">
-    <!-- GitHub Star Button -->
-    <a class="github-button" 
-       href="https://github.com/ilantwig/deepsprint" 
-       data-size="large" 
-       data-show-count="true" 
-       aria-label="Star ilantwig/deepsprint on GitHub">Star</a>
-    
-    <!-- Twitter Follow Button -->
-    <a href="https://twitter.com/itwig" 
-       class="twitter-follow-button" 
-       data-size="large" 
-       data-show-count="true">Follow @itwig</a>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSprint</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>DeepSprint</h1>
+        <div class="social-buttons">
+            <!-- GitHub Star Button -->
+            <a class="github-button" 
+               href="https://github.com/ilantwig/deepsprint" 
+               data-size="large" 
+               data-show-count="true" 
+               aria-label="Star ilantwig/deepsprint on GitHub">Star</a>
+            
+            <!-- Twitter Follow Button -->
+            <a href="https://twitter.com/itwig" 
+               class="twitter-follow-button" 
+               data-size="large" 
+               data-show-count="true">Follow @itwig</a>
+        </div>
+    </header>
 
-<!-- Add these scripts before closing body tag -->
-<script async defer src="https://buttons.github.io/buttons.js"></script>
-<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
-</body> 
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</body>
+</html> 
