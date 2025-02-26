@@ -11,8 +11,8 @@
 
 DeepSprint supercharges your research with AI, helping you dive deep into any topic in record time. Born from my own need to accelerate research workflows at [Navan](https://www.navan.com), I built this tool to make thorough research accessible to everyone.
 
-# Quick start - using OpenAI models
-With pip (Python<=3.12):
+# Quick start
+Requires Python<=3.12!!
 
 ```bash
 git clone https://github.com/ilantwig/deepsprint.git
@@ -20,6 +20,14 @@ cd deepsprint
 pip install -r requirements.txt
 python app.py
 ```
+You can also use conda to install the dependencies.
+```bash
+conda create -n deepsprint python=3.11
+conda activate deepsprint
+pip install -r requirements.txt
+python app.py
+```
+
 Access the application through your web browser at `http://localhost:5000` (or the configured port)
 
 You will need to have a Serper API key and either LM-Studio URL or OpenAI KEY and Model Name.
