@@ -27,6 +27,9 @@ LM_STUDIO_URL=
 ```bash
 python app.py
 ```
+<picture>
+   <img src="./static/rtx-compare.png"  width="full">
+</picture>
 
 ## Running in test mode
 
@@ -34,7 +37,7 @@ python app.py
 python app.py --test
 ```
 <picture>
-   <img src="./static/rtx-compare.png"  width="full">
+   <img src="./static/test.png"  width="full">
 </picture>
 
 ## Features
