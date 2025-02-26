@@ -47,7 +47,8 @@ def add_header(response):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    model_status = get_model_status()  # Get the model status
+    return render_template('index.html', test_mode=test_mode, model_status=model_status)
 
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():

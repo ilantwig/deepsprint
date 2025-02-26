@@ -414,7 +414,9 @@
             {% if test_mode %}
             <span class="test-mode-badge">Test Mode</span>
             {% endif %}
+            {% if model_status %}
             <span class="model-badge">{{ model_status }}</span>
+            {% endif %}
         </h1>
         <form method="POST" id="research-form">
             <div class="form-group">
