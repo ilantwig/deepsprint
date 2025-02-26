@@ -328,7 +328,7 @@
 
         <div class="button-container">
             <button onclick="regeneratePlan('{{ research_topic }}')">Regenerate Plan</button>
-            <button onclick="executeFreeSearch()" class="deep-sprint-button">Run FreeSearch</button>
+            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
         </div>
 
         <div id="results-container">
@@ -368,7 +368,7 @@
             });
         }
 
-        async function executeFreeSearch() {
+        async function executeDeepSprint() {
             document.getElementById('loading-spinner').style.display = 'block';
             const tabButtons = document.getElementById('tab-buttons');
             const tabContents = document.getElementById('tab-contents');
@@ -379,7 +379,7 @@
                 .map(step => step.textContent.trim());
             
             try {
-                const response = await fetch('/execute_free_search', {
+                const response = await fetch('/execute_deep_sprint', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
