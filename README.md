@@ -18,9 +18,14 @@ With pip (Python<=3.12):
 git clone https://github.com/ilantwig/deepsprint.git
 cd deepsprint
 pip install -r requirements.txt
+python app.py
 ```
+You will need to have a Serper API key and either LM-Studio URL or OpenAI KEY and Model Name.
+<picture>
+    <img src="./static/settings.png" width="100%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</picture>
 
-Add your API keys for the provider you want to use to your `.env` file.
+For permenant configuration, add your API keys for the provider you want to use to your `.env` file.
 
 ```env
 OPENAI_API_KEY=
