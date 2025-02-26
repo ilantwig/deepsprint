@@ -5,7 +5,7 @@
 <h1 align="center">Let the AI do the research 🤖</h1>
 
 [![GitHub followers](https://img.shields.io/github/followers/ilantwig?label=Follow)](https://github.com/ilantwig)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/ilantwig)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/itwig)
 [![Twitter](https://img.shields.io/twitter/follow/itwig)](https://twitter.com/itwig)
 
 # DeepSprint
