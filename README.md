@@ -6,7 +6,7 @@
 
 DeepSprint supercharges your research with AI, helping you dive deep into any topic in record time. Born from my own need to accelerate research workflows at [Navan](https://www.navan.com), I built this tool to make thorough research accessible to everyone.
 
-# Quick start
+# Quick start - using OpenAI models
 With pip (Python<=3.12):
 
 ```bash
@@ -19,9 +19,8 @@ Add your API keys for the provider you want to use to your `.env` file.
 
 ```env
 OPENAI_API_KEY=
+OPENAI_MODEL_NAME=
 SERPER_API_KEY=
-or
-LM_STUDIO_URL=
 ```
 
 ```bash
@@ -29,6 +28,15 @@ python app.py
 ```
 <picture>
    <img src="./static/results.png" width="50%" height = "50%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</picture>
+
+# Quick start - using LM Studio models
+```env
+LM_STUDIO_BASE_URL=
+```
+Make sure you started LM Studio server and it's running.
+<picture>
+   <img src="./static/lm-studio-server-mac.jpg"   style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 ## Running in test mode
