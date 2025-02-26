@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", ".*PydanticDeprecatedSince20.*")
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from pathlib import Path
-from research_coordinator import build_research_plan, deep_sprint_topic, generate_final_report
+from research_coordinator import build_research_plan, free_search_topic, generate_final_report
 import json
 from threading import Thread
 from queue import Queue
@@ -57,8 +57,8 @@ def regenerate_plan():
                   research_results=None, 
                   test_mode=test_mode)
 
-@app.route('/execute_deep_sprint', methods=['POST'])
-def execute_deep_sprint():
+@app.route('/execute_free_search', methods=['POST'])
+def execute_freesearch():
     research_steps = request.json.get('research_steps', [])
     result_queue = Queue()
     results_container = {'all_results': ''}
@@ -87,7 +87,7 @@ def execute_deep_sprint():
                     'execution_time': '1.2s'
                 }
             else:
-                result = deep_sprint_topic(step, step_num)
+                result = free_search_topic(step, step_num)
             
             result_dict = {
                 'step': step_num + 1,

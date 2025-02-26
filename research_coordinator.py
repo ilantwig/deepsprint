@@ -77,9 +77,9 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
     logger.debug(f"Research plan build completed in {duration}")
     return research_plan_json 
 
-def deep_sprint_topic(step: str, step_number: int) -> str:
+def free_search_topic(step: str, step_number: int) -> str:
     """
-    Executes a specific research step.
+    Executes a specific research step using free search.
     
     Args:
         step (str): The step to execute
