@@ -163,37 +163,133 @@
         
         .result-content {
             position: relative;
-            max-height: 4.5em; /* Approximately 3 lines */
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-
-        .result-content.expanded {
-            max-height: none;
-        }
-
-        .show-more-btn {
-            color: #3498db;
-            cursor: pointer;
-            text-decoration: underline;
-            font-size: 0.8em;
-            display: inline-block;
         }
 
         .meta-info {
             margin-top: 5px;
         }
+
+        /* Updated styles for tabs */
+        .tabs {
+            margin-top: 20px;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: visible;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            overflow-y: hidden !important;
+            padding: 6px 0;
+            margin: 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            white-space: nowrap;
+            height: 32px;
+            min-height: 32px;
+            max-height: 32px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .tab-buttons::-webkit-scrollbar {
+            display: none;
+            height: 0;
+            width: 0;
+        }
+        
+        .tab-button {
+            width: 20px;
+            height: 20px;
+            min-height: 20px;
+            max-height: 20px;
+            flex-shrink: 0;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+        
+        .tab-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .tab-button.active {
+            background-color: #2980b9;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #2980b9;
+            border-radius: 2px;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 24px;
+            background-color: #fff;
+            border-radius: 0 0 4px 4px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .test-mode-badge {
+            display: inline-block;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 0.4em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            vertical-align: middle;
+            margin-left: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Research Plan Generator</h1>
+        <h1>
+            Research Plan Generator
+            {% if test_mode %}
+            <span class="test-mode-badge">Test Mode</span>
+            {% endif %}
+        </h1>
         <form method="POST" id="research-form">
             <div class="form-group">
                 <label for="research_topic">Research Topic:</label>
-                <textarea id="research_topic" name="research_topic" rows="4" required>{{ research_topic if research_topic else '' }}</textarea>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <textarea id="research_topic" name="research_topic" rows="4" required style="flex: 1;">{{ research_topic if research_topic else '' }}</textarea>
+                    <button type="submit" style="margin: 0;">Generate Plan</button>
+                </div>
             </div>
-            <button type="submit">Generate Plan</button>
         </form>
         
         <div id="loading-spinner" class="spinner"></div>
@@ -214,7 +310,12 @@
             <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
         </div>
 
-        <div id="results-container"></div>
+        <div id="results-container">
+            <div class="tabs">
+                <div class="tab-buttons" id="tab-buttons"></div>
+            </div>
+            <div id="tab-contents"></div>
+        </div>
         {% endif %}
     </div>
     <script>
@@ -248,8 +349,10 @@
 
         async function executeDeepSprint() {
             document.getElementById('loading-spinner').style.display = 'block';
-            const resultsContainer = document.getElementById('results-container');
-            resultsContainer.innerHTML = '<h2>Research Results:</h2>';
+            const tabButtons = document.getElementById('tab-buttons');
+            const tabContents = document.getElementById('tab-contents');
+            tabButtons.innerHTML = '';
+            tabContents.innerHTML = '';
             
             const steps = Array.from(document.querySelectorAll('.research-step'))
                 .map(step => step.textContent.trim());
@@ -281,42 +384,61 @@
                         try {
                             const result = JSON.parse(resultStr);
                             if (result.final_report) {
-                                // Handle final report
-                                const finalReportDiv = document.createElement('div');
-                                finalReportDiv.className = 'final-report';
-                                finalReportDiv.innerHTML = `
-                                    <h2>Final Research Report</h2>
-                                    <div class="result-content">
-                                        ${result.final_report}
-                                    </div>
-                                    <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
-                                `;
-                                resultsContainer.appendChild(finalReportDiv);
-                                finalReportDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                            } else {
-                                // Handle regular step results
-                                const resultDiv = document.createElement('div');
-                                resultDiv.className = 'result-item';
-                                resultDiv.innerHTML = `
-                                    <div class="step">
-                                        <div class="step-number">${result.step}</div>
-                                        <div class="step-content">
-                                            <p>${steps[result.step - 1]}</p>
-                                            ${result.error ? 
-                                                `<p class="error">${result.error}</p>` :
-                                                `<div class="result-content">
-                                                    <p>${result.result}</p>
-                                                 </div>
-                                                 <div class="meta-info">
-                                                    <span class="show-more-btn" onclick="toggleContent(this)">Show More</span>
-                                                    <span class="execution-time">Execution time: ${result.execution_time}</span>
-                                                 </div>`
-                                            }
+                                // Create final report tab
+                                const finalTabButton = document.createElement('button');
+                                finalTabButton.className = 'tab-button';
+                                finalTabButton.textContent = 'Final';
+                                finalTabButton.onclick = () => switchTab('final-report');
+                                tabButtons.appendChild(finalTabButton);
+
+                                const finalTabContent = document.createElement('div');
+                                finalTabContent.className = 'tab-content';
+                                finalTabContent.id = 'final-report';
+                                finalTabContent.innerHTML = `
+                                    <div class="final-report">
+                                        <h2>Final Research Report</h2>
+                                        <div class="result-content">
+                                            ${result.final_report}
                                         </div>
                                     </div>
                                 `;
-                                resultsContainer.appendChild(resultDiv);
-                                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                                tabContents.appendChild(finalTabContent);
+                                switchTab('final-report');
+                            } else {
+                                // Create step tab if it doesn't exist
+                                const tabId = `step-${result.step}`;
+                                if (!document.getElementById(tabId)) {
+                                    const tabButton = document.createElement('button');
+                                    tabButton.className = 'tab-button';
+                                    tabButton.textContent = result.step;
+                                    tabButton.onclick = () => switchTab(tabId);
+                                    tabButtons.appendChild(tabButton);
+
+                                    const tabContent = document.createElement('div');
+                                    tabContent.className = 'tab-content';
+                                    tabContent.id = tabId;
+                                    tabContents.appendChild(tabContent);
+                                }
+
+                                // Add content to the step tab
+                                const tabContent = document.getElementById(tabId);
+                                const resultDiv = document.createElement('div');
+                                resultDiv.className = 'result-item';
+                                resultDiv.innerHTML = `
+                                    <div class="step-content">
+                                        <h3>${steps[result.step - 1]}</h3>
+                                        ${result.error ? 
+                                            `<p class="error">${result.error}</p>` :
+                                            `<div class="result-content">
+                                                <p>${result.result}</p>
+                                            </div>
+                                            <div class="meta-info">
+                                                <span class="execution-time">Execution time: ${result.execution_time}</span>
+                                            </div>`
+                                        }
+                                    </div>
+                                `;
+                                tabContent.appendChild(resultDiv);
                             }
                         } catch (e) {
                             console.error('Error parsing result:', e);
@@ -325,16 +447,35 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                resultsContainer.innerHTML += '<p class="error">Error processing research steps</p>';
+                tabContents.innerHTML = '<p class="error">Error processing research steps</p>';
             } finally {
                 document.getElementById('loading-spinner').style.display = 'none';
             }
         }
 
-        function toggleContent(button) {
-            const content = button.closest('.result-item, .final-report').querySelector('.result-content');
-            content.classList.toggle('expanded');
-            button.textContent = content.classList.contains('expanded') ? 'Show Less' : 'Show More';
+        function switchTab(tabId) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Add active class to selected tab
+            const selectedTab = document.getElementById(tabId);
+            const selectedButton = Array.from(document.querySelectorAll('.tab-button'))
+                .find(button => {
+                    if (tabId === 'final-report') {
+                        return button.textContent === 'Final';
+                    }
+                    return button.textContent === tabId.replace('step-', '');
+                });
+            
+            if (selectedTab && selectedButton) {
+                selectedTab.classList.add('active');
+                selectedButton.classList.add('active');
+            }
         }
     </script>
 </body>

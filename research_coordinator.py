@@ -8,6 +8,7 @@ from utils.capabilities.Browser import Browser
 import logging
 import json
 from utils.crewid import CrewID
+from config import test_mode
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -87,14 +88,6 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
     Returns:
         str: The result of the research step
     """
-    return {
-        'summary': """Find information on any awards or recognitions Ilan Twig has received.
-**Comprehensive Report on Awards and Recognitions Received by Ilan Twig** Ilan Twig is a prominent figure in the tech industry, particularly known for his role as the co-founder and Chief Technology Officer (CTO) of Navan, Inc., formerly known as TripActions. His career is marked by significant achievements and contributions to corporate travel management. While the sources provided extensively cover the growth and success of TripActions/Navan, details on specific awards or recognitions directly attributed to Ilan Twig are scarce. However, the following synthesis highlights relevant aspects of his professional journey and associated accolades through the achievements of TripActions/Navan, which indirectly reflect on his contributions and leadership. ### Professional Background and Contributions Ilan Twig, based in Mountain View, California, has established a robust professional presence, particularly in the areas of cloud computing and AI-driven solutions for business travel. He has been instrumental in the success and expansion of Navan, a company co-founded with Ariel Cohen. Navan has evolved into a leader in corporate travel management, integrating AI to enhance the traveler experience and streamline expense management. ### Indirect Recognitions through TripActions/Navan 1. **Company Growth and Valuation:** - Under the leadership of Ilan Twig and Ariel Cohen, TripActions (now Navan) has experienced rapid growth, securing significant funding rounds. Notably, the company achieved a valuation exceeding $1 billion, earning a place in the 'Global Unicorn Club.' This milestone reflects the effective leadership and innovative solutions developed under Twig's technical guidance. 2. **Funding and Recognition from Prestigious Investors:** - The company has received substantial investments from leading venture capital firms such as Andreessen Horowitz and Lightspeed Venture Partners. The involvement of such reputable investors underscores the company's strong market position and the confidence in its leadership team, including Twig. 3. **Cultural and Leadership Accolades:** - TripActions has been recognized for its company culture and leadership, receiving employee-voted awards from Comparably. These acknowledgments include rankings for Best Company Culture and Best CEO, highlighting the positive work environment and visionary leadership fostered by the company's founders. 4. **Innovative Product Development:** - The launch of TripActions Liquid, an integrated payment and expense management platform, exemplifies the innovative spirit and technical prowess brought forth by Twig. This product development has further solidified the company's reputation as a leader in corporate travel solutions. ### Patents and Publications Ilan Twig holds several patents related to web navigation and data integration, showcasing his innovative contributions to technology. His work has been published, further emphasizing his expertise and thought leadership in the tech industry. ### Recommendations and Professional Endorsements Twig has received numerous professional recommendations praising his engineering skills, leadership, and impact on technology and team management. These endorsements from peers and industry professionals highlight his influence and effectiveness in his field. ### Conclusion While specific awards or recognitions directly attributed to Ilan Twig were not explicitly detailed in the sources, his leadership and technical innovations have significantly contributed to the success and recognition of Navan. The achievements of the company, including its rapid growth, industry accolades, and esteemed investor backing, indirectly reflect the high regard for Twig's contributions and expertise in his domain.
-""",
-        'execution_time': str(2)
-    }
-
-
 
     start_time = datetime.now()
     logger.debug(f"Starting step execution at {start_time}")
@@ -121,12 +114,32 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
         except Exception as e:
             logger.error(f"Error processing {site}: {str(e)}")
             continue
-    topic_summary_prompot=f"""You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
-    Topic: {step}
-    Summary: {all_results}="""
-    topic_summary_response=default_model.invoke(topic_summary_prompot)
-    topic_summary_response=topic_summary_response.content.strip()
-    topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
+    # For testing, you can set this environment variable to use mock data
+    if test_mode:
+        topic_summary_response = """<style>
+        body {
+            font-family: Arial;
+        }
+        </style>
+        <h1>Mock Research Report</h1>
+        <p>This is a mock research report for step: {step}</p>
+        <h2>Key Findings</h2>
+        <ul>
+            <li>Finding 1: Lorem ipsum dolor sit amet</li>
+            <li>Finding 2: Consectetur adipiscing elit</li>
+            <li>Finding 3: Sed do eiusmod tempor</li>
+        </ul>
+        <h2>Detailed Analysis</h2>
+        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+        """.format(step=step)
+    else:
+        topic_summary_prompot=f"""You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
+        Topic: {step}
+        Summary: {all_results}="""
+        topic_summary_response=default_model.invoke(topic_summary_prompot)
+        topic_summary_response=topic_summary_response.content.strip()
+        topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
     
     # Define the CSS style
     css_style = get_report_css_style()

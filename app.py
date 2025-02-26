@@ -1,9 +1,22 @@
+import warnings
+import logging
+# Filter out Pydantic's deprecation warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
+warnings.filterwarnings("ignore", ".*Pydantic V1.*")
+warnings.filterwarnings("ignore", ".*PydanticDeprecatedSince20.*")
+
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
+from pathlib import Path
 from research_coordinator import build_research_plan, deep_sprint_topic, generate_final_report
 import json
 from threading import Thread
 from queue import Queue
+from argparse import ArgumentParser
+from config import test_mode, set_test_mode
+
+logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -17,36 +30,65 @@ def add_header(response):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    global test_mode
+    # Import test_mode again to get the latest value
+    from config import test_mode
+    print(f"test_mode: {test_mode}")
     research_plan = None
     research_results = None
     if request.method == 'POST':
         research_topic = request.form['research_topic']
         research_plan = build_research_plan(research_topic)
-        # Pass the original topic, plan, and results to the template
         return render_template('index.html', 
                              research_plan=research_plan, 
                              research_topic=research_topic,
-                             research_results=research_results)
+                             research_results=research_results,
+                             test_mode=test_mode)
     return render_template('index.html', 
                          research_plan=research_plan,
-                         research_results=research_results)
+                         research_results=research_results,
+                         test_mode=test_mode)
 
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():
     research_topic = request.form['research_topic']
     research_plan = build_research_plan(research_topic)
-    return jsonify(research_plan=research_plan, research_results=None)
+    return jsonify(research_plan=research_plan, 
+                  research_results=None, 
+                  test_mode=test_mode)
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
     result_queue = Queue()
-    # Move all_results to a mutable container to avoid global variable issues
     results_container = {'all_results': ''}
 
     def process_step(step, step_num):
         try:
-            result = deep_sprint_topic(step, step_num)
+            # Use the global test_mode variable instead of hardcoded value
+            if test_mode:
+                mock_text = f"""
+                Detailed research findings for step {step_num + 1}: {step}
+                
+                Analysis:
+                The investigation into this aspect revealed several key insights. First, we identified multiple perspectives on the topic including historical context and recent developments. The data suggests a correlation between several factors that influence the outcome significantly.
+                
+                Key findings:
+                1. Primary discovery shows a strong relationship between variables
+                2. Secondary elements indicate potential applications in related domains
+                3. Unexpected patterns emerged during the third phase of analysis
+                4. Literature review confirms the validity of these observations
+                
+                Implications:
+                These findings suggest broader applications and raise new questions for further exploration. The methodology applied here could be extended to similar research domains.
+                """
+                result = {
+                    'summary': mock_text.strip(),
+                    'execution_time': '1.2s'
+                }
+            else:
+                result = deep_sprint_topic(step, step_num)
+            
             result_dict = {
                 'step': step_num + 1,
                 'result': result['summary'],
@@ -85,7 +127,39 @@ def execute_deep_sprint():
 
         # Use the container to access all_results
         if results_container['all_results']:
-            final_report = generate_final_report(results_container['all_results'])
+            if test_mode:
+                final_report = """
+                # Comprehensive Research Synthesis
+                
+                ## Executive Summary
+                This report consolidates findings from multiple research steps exploring the designated topic. The investigation revealed interconnected themes and actionable insights across several dimensions of the subject matter.
+                
+                ## Methodology Overview
+                The research implemented a multi-phase approach with parallel investigation streams. Each step focused on distinct aspects while maintaining coherence with the overall research question.
+                
+                ## Key Findings
+                1. **Primary Observations**: Analysis identified recurring patterns across data sources, suggesting fundamental principles underlying the phenomenon.
+                
+                2. **Contextual Factors**: Environmental and situational variables significantly influence outcomes in ways previously underappreciated in the literature.
+                
+                3. **Emerging Trends**: Recent developments indicate a shift in paradigm that warrants further exploration and potentially new theoretical frameworks.
+                
+                4. **Limitations**: Current methodological approaches show specific constraints when applied to certain edge cases.
+                
+                ## Synthesis of Results
+                The combined evidence points toward a coherent narrative that bridges previously disconnected concepts. The interrelationships between various factors demonstrate complex but discernible patterns.
+                
+                ## Recommendations
+                Based on these findings, several avenues for further investigation appear promising:
+                - Exploration of newly identified correlations
+                - Development of targeted interventions based on discovered principles
+                - Refinement of existing theoretical models to accommodate new insights
+                
+                ## Conclusion
+                This research provides a foundation for deeper understanding and practical applications within the domain. The multi-faceted approach has yielded a more nuanced perspective than previous single-dimension studies.
+                """
+            else:
+                final_report = generate_final_report(results_container['all_results'])
             yield f"{json.dumps({'final_report': final_report})}\n"
 
     return Response(
@@ -106,50 +180,16 @@ def list_research():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# @app.route('/load_research/<crewid>', methods=['GET'])
-# def load_research(crewid):
-#     try:
-#         output_dir = Path('output') / crewid
-#         if not output_dir.exists():
-#             return jsonify({'error': 'Research not found'}), 404
-            
-#         research_data = {
-#             'steps': [],
-#             'results': [],
-#             'final_report': ''
-#         }
-        
-#         # Load step reports
-#         step = 0
-#         while True:
-#             step_file = output_dir / f"{step}_step_report.html"
-#             if not step_file.exists():
-#                 break
-#             with open(step_file, 'r', encoding='utf-8') as f:
-#                 research_data['results'].append(f.read())
-#             step += 1
-            
-#         # Load final reports
-#         final_report = []
-        
-#         # Try loading regular final report
-#         final_report_file = output_dir / "final_report.html"
-#         if final_report_file.exists():
-#             with open(final_report_file, 'r', encoding='utf-8') as f:
-#                 final_report.append(f.read())
-                
-#         # Try loading fina final report
-#         fina_final_report_file = output_dir / "fina_final_report.html"
-#         if fina_final_report_file.exists():
-#             with open(fina_final_report_file, 'r', encoding='utf-8') as f:
-#                 final_report.append(f.read())
-        
-#         # Combine final reports if both exist
-#         research_data['final_report'] = '<br><br>'.join(final_report)
-                
-#         return jsonify(research_data)
-#     except Exception as e:
-#         return jsonify({'error': str(e)}), 500
-
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--test', action='store_true', help='Run in test mode with mock data')
+    args = parser.parse_args()
+    
+    # Update test_mode using the new function from config
+    logger.debug(f"Setting mode to {'test' if args.test else 'production'} mode")
+    set_test_mode(args.test)
+    
+    # Import test_mode again after setting it
+    from config import test_mode
+    
     app.run(debug=True)
