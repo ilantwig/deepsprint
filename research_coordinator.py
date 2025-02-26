@@ -134,9 +134,11 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
         <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
         """.format(step=step)
     else:
-        topic_summary_prompot=f"""You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
-        Topic: {step}
-        Summary: {all_results}="""
+        today = date.today()
+        topic_summary_prompot=f"""Date: {today}.
+You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
+Topic: {step}
+Summary: {all_results}="""
         topic_summary_response=default_model.invoke(topic_summary_prompot)
         topic_summary_response=topic_summary_response.content.strip()
         topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
@@ -173,8 +175,10 @@ def generate_final_report(all_results: str) -> str:
     Returns:
         str: The final report
     """
-    final_report_prompt=f"""Create a verbose, detailed executive summary report in html from below content.  You must include MOST of the details from the original content. Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
-    Content: {all_results}="""
+    today = date.today()
+    final_report_prompt=f"""Date: {today}.
+Create a verbose, detailed executive summary report in html from below content.  You must include MOST of the details from the original content. Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
+Content: {all_results}="""
     final_report_response=default_model.invoke(final_report_prompt)
     final_report_response=final_report_response.content.strip()
     final_report_response=final_report_response.replace("```html","").replace("```","")
