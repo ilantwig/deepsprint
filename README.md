@@ -1,5 +1,5 @@
 <picture>
-   <img src="./static/rtx-compare.png"  width="full">
+   <img src="./static/rtx-compare.png" width="full" style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 # DeepSprint
@@ -28,7 +28,7 @@ LM_STUDIO_URL=
 python app.py
 ```
 <picture>
-   <img src="./static/results.png"  width="full">
+   <img src="./static/results.png" width="full" style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 ## Running in test mode
@@ -37,7 +37,7 @@ python app.py
 python app.py --test
 ```
 <picture>
-   <img src="./static/test.png"  width="full">
+   <img src="./static/test.png" width="full" style="border: 2px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 ## Features
