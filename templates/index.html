@@ -898,10 +898,16 @@ If the problem persists, please contact the administrator for assistance.`);
                                     const historyItem = document.createElement('div');
                                     historyItem.className = 'history-item';
                                     historyItem.setAttribute('data-crewid', crewid);
-                                    historyItem.setAttribute('data-topic', researchData.research_topic || '');
                                     
-                                    const topic = researchData.research_topic || 'Unknown topic';
-                                    const truncatedTopic = topic.length > 60 ? topic.substring(0, 57) + '...' : topic;
+                                    // Get research topic from research_plan.research_topic if available
+                                    let topic = researchData.research_topic || '';
+                                    if (!topic && researchData.research_plan && researchData.research_plan.research_topic) {
+                                        topic = researchData.research_plan.research_topic;
+                                    }
+                                    
+                                    historyItem.setAttribute('data-topic', topic || '');
+                                    
+                                    const truncatedTopic = topic && topic.length > 60 ? topic.substring(0, 57) + '...' : (topic || 'Unknown topic');
                                     
                                     historyItem.innerHTML = `
                                         <div class="history-item-content" onclick="loadResearch('${crewid}')">

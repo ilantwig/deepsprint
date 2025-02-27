@@ -215,7 +215,10 @@ def get_research(crewid):
             return jsonify({'error': 'Research not found'}), 404
             
         # Get research plan
-        plan_file = crew_dir / 'research_plan.json'
+        plan_file = crew_dir / '_research_plan.json'  # Try with underscore prefix first
+        if not plan_file.exists():
+            plan_file = crew_dir / 'research_plan.json'  # Then try without underscore
+            
         research_plan = {}
         if plan_file.exists():
             try:
@@ -237,7 +240,7 @@ def get_research(crewid):
                 except Exception:
                     pass
         
-        # Get research topic
+        # Get research topic - first try from research_topic.txt
         topic_file = crew_dir / 'research_topic.txt'
         research_topic = ""
         if topic_file.exists():
@@ -246,6 +249,10 @@ def get_research(crewid):
                     research_topic = f.read().strip()
             except Exception as e:
                 logger.error(f"Error reading research topic for crew {crewid}: {e}")
+        
+        # If no topic found, try to get it from research_plan.json
+        if not research_topic and 'research_topic' in research_plan:
+            research_topic = research_plan['research_topic']
         
         # Get research results
         results_file = crew_dir / 'research_results.json'
