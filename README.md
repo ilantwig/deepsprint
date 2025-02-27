@@ -33,7 +33,7 @@ Access the application through your web browser at `http://localhost:5000` (or t
 
 You will need to have a Serper API key and either LM-Studio URL or OpenAI KEY and Model Name.
 <picture>
-    <img src="./static/settings.png" width="100%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <img src="./static/settings.png" width="90%" style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 For permenant configuration, add your API keys for the provider you want to use to your `.env` file.
