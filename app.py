@@ -199,6 +199,125 @@ def list_research():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/get_research/<crewid>', methods=['GET'])
+def get_research(crewid):
+    try:
+        crew_dir = Path(f'output/{crewid}')
+        if not crew_dir.exists():
+            return jsonify({'error': 'Research not found'}), 404
+            
+        # Get research plan
+        plan_file = crew_dir / 'research_plan.json'
+        research_plan = {}
+        if plan_file.exists():
+            try:
+                with open(plan_file, 'r') as f:
+                    content = f.read().strip()
+                    if content:  # Check if file is not empty
+                        research_plan = json.loads(content)
+                    else:
+                        logger.warning(f"Empty research plan file for crew {crewid}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Error decoding research plan for crew {crewid}: {e}")
+                # Try to recover the file content as plain text
+                try:
+                    with open(plan_file, 'r') as f:
+                        content = f.read().strip()
+                    if content:
+                        # Store as a single step if we can't parse JSON
+                        research_plan = {"step1": content}
+                except Exception:
+                    pass
+        
+        # Get research topic
+        topic_file = crew_dir / 'research_topic.txt'
+        research_topic = ""
+        if topic_file.exists():
+            try:
+                with open(topic_file, 'r') as f:
+                    research_topic = f.read().strip()
+            except Exception as e:
+                logger.error(f"Error reading research topic for crew {crewid}: {e}")
+        
+        # Get research results
+        results_file = crew_dir / 'research_results.json'
+        research_results = {}
+        
+        # First try the standard JSON file
+        if results_file.exists():
+            try:
+                with open(results_file, 'r') as f:
+                    content = f.read().strip()
+                    if content:  # Check if file is not empty
+                        # Try to parse as JSON first
+                        try:
+                            research_results = json.loads(content)
+                        except json.JSONDecodeError:
+                            # If it's not valid JSON, it might be HTML content
+                            # Store it as a single result
+                            research_results = {"1": content}
+                    else:
+                        logger.warning(f"Empty research results file for crew {crewid}")
+            except Exception as e:
+                logger.error(f"Error reading research results file for crew {crewid}: {e}")
+        
+        # If no results found, check for individual HTML files (like 0_step_report.html)
+        if not research_results:
+            step_files = list(crew_dir.glob('*_step_report.html'))
+            if step_files:
+                logger.info(f"Found {len(step_files)} individual step report files for crew {crewid}")
+                for step_file in step_files:
+                    try:
+                        # Extract step number from filename (e.g., "0_step_report.html" -> "0")
+                        step_num = step_file.name.split('_')[0]
+                        with open(step_file, 'r') as f:
+                            content = f.read()
+                            research_results[step_num] = content
+                    except Exception as e:
+                        logger.error(f"Error reading step file {step_file} for crew {crewid}: {e}")
+        
+        # Get final report - first try the standard file
+        final_report_file = crew_dir / 'final_report.txt'
+        final_report = ""
+        
+        if final_report_file.exists():
+            try:
+                with open(final_report_file, 'r') as f:
+                    final_report = f.read()
+            except Exception as e:
+                logger.error(f"Error reading final report for crew {crewid}: {e}")
+        
+        # If no final report found, check for final_final_report.html
+        if not final_report:
+            final_html_file = crew_dir / 'final_final_report.html'
+            if final_html_file.exists():
+                try:
+                    with open(final_html_file, 'r') as f:
+                        final_report = f.read()
+                except Exception as e:
+                    logger.error(f"Error reading final HTML report for crew {crewid}: {e}")
+        
+        # If we still don't have a research plan but have step reports, create a dummy plan
+        if not research_plan and research_results:
+            research_plan = {}
+            for step_num in sorted(research_results.keys(), key=lambda x: int(x) if x.isdigit() else float('inf')):
+                research_plan[f"step{step_num}"] = f"Research step {step_num}"
+        
+        # If we don't have a research topic but have results, create a dummy topic
+        if not research_topic and (research_results or final_report):
+            research_topic = "Research topic (recovered from results)"
+        
+        return jsonify({
+            'research_topic': research_topic,
+            'research_plan': research_plan,
+            'research_results': research_results,
+            'final_report': final_report,
+            'crewid': crewid
+        })
+    except Exception as e:
+        logger.exception(f"Error retrieving research for crew {crewid}")
+        return jsonify({'error': str(e), 'crewid': crewid}), 500
+
 @app.route('/settings', methods=['GET'])
 def get_settings():
     return jsonify({
@@ -254,6 +373,14 @@ def check_settings():
 def get_current_crewid():
     current_crewid = CrewID.get_crewid()
     return jsonify({"crewid": current_crewid})
+
+@app.route('/set_crewid/<crewid>', methods=['POST'])
+def set_crewid(crewid):
+    try:
+        CrewID.set_crewid(crewid)
+        return jsonify({"status": "success", "crewid": crewid})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 if __name__ == '__main__':
     parser = ArgumentParser()

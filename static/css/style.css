@@ -415,4 +415,114 @@ button:hover {
     font-size: 0.8em;
     color: #e74c3c;
     margin-bottom: 15px;
+}
+
+/* History Dropdown */
+.history-dropdown {
+    position: absolute;
+    top: 20px;
+    right: 200px; /* Increase this value to move it further left from the settings button */
+    display: inline-block;
+}
+
+.history-dropdown-btn {
+    background-color: #9b59b6;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+}
+
+.history-dropdown-btn svg {
+    margin-right: 5px;
+}
+
+.history-dropdown-btn:hover {
+    background-color: #8e44ad;
+}
+
+.history-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 300px;
+    max-width: 400px;
+    max-height: 400px;
+    overflow-y: auto;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+
+.history-dropdown-content.show {
+    display: block;
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.history-search {
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    border-bottom: 1px solid #eee;
+    z-index: 2;
+}
+
+.history-search input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.history-list {
+    padding: 5px 0;
+}
+
+.history-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item:hover {
+    background-color: #f0f0f0;
+}
+
+.history-item-content {
+    cursor: pointer;
+}
+
+.history-crew-id {
+    font-weight: bold;
+    color: #34495e;
+    font-size: 0.9em;
+}
+
+.history-topic {
+    color: #555;
+    font-size: 0.85em;
+    margin-top: 3px;
+}
+
+.loading-history, .no-history, .error {
+    padding: 15px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+.error {
+    color: #e74c3c;
 } 

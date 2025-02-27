@@ -18,6 +18,23 @@
         Settings
     </button>
 
+    <div class="history-dropdown">
+        <button onclick="toggleHistoryDropdown()" class="history-dropdown-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 16A8 8 0 108 0a8 8 0 000 16zm1-8.414V4a1 1 0 10-2 0v4c0 .27.11.52.29.71l3 3a1 1 0 001.42-1.42L9 7.586z"/>
+            </svg>
+            History
+        </button>
+        <div id="historyDropdownContent" class="history-dropdown-content">
+            <div class="history-search">
+                <input type="text" id="historySearch" placeholder="Search..." onkeyup="filterHistory()">
+            </div>
+            <div id="historyList" class="history-list">
+                <!-- Remove the loading message that appears on page load -->
+            </div>
+        </div>
+    </div>
+
     <div id="settings-modal" class="settings-modal">
         <div class="settings-content">
             <span class="close-button" onclick="closeSettings()">&times;</span>
@@ -43,6 +60,15 @@
                 </div>
                 <button type="submit">Save Settings</button>
             </form>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeHistory()">&times;</span>
+            <div id="history-list" class="history-list">
+                <!-- No loading message here -->
+            </div>
         </div>
     </div>
 
@@ -115,6 +141,15 @@
         function submitForm() {
             const topic = document.getElementById('research_topic').value;
             document.getElementById('loading-spinner').style.display = 'block';
+            
+            // Instead of hiding the entire results container, just clear its contents
+            const resultsContainer = document.getElementById('results-container');
+            if (resultsContainer) {
+                const tabContents = document.getElementById('tab-contents');
+                if (tabContents) {
+                    tabContents.innerHTML = '';
+                }
+            }
             
             // First, get the current crewID for debugging
             fetch('/current_crewid')
@@ -442,6 +477,487 @@
                 closeSettings();
             }
         }
+
+        function openHistory() {
+            document.getElementById('history-modal').style.display = 'block';
+            // Add loading indicator when we actually start loading
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '<p>Loading research history...</p>';
+            loadResearchHistory();
+        }
+
+        function closeHistory() {
+            document.getElementById('history-modal').style.display = 'none';
+        }
+
+        function loadResearchHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '<p>Loading research history...</p>';
+            
+            fetch('/list_research')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.folders && data.folders.length > 0) {
+                        historyList.innerHTML = '';
+                        data.folders.forEach(crewid => {
+                            const historyItem = document.createElement('div');
+                            historyItem.className = 'history-item';
+                            historyItem.innerHTML = `
+                                <div class="history-item-header">
+                                    <span class="history-crew-id">Crew ${crewid}</span>
+                                    <button onclick="loadResearch('${crewid}')" class="load-button">Load</button>
+                                </div>
+                                <div id="history-details-${crewid}" class="history-details"></div>
+                            `;
+                            historyList.appendChild(historyItem);
+                            
+                            // Load research details
+                            fetch(`/get_research/${crewid}`)
+                                .then(response => response.json())
+                                .then(researchData => {
+                                    if (researchData.research_topic) {
+                                        const detailsDiv = document.getElementById(`history-details-${crewid}`);
+                                        detailsDiv.innerHTML = `
+                                            <p class="history-topic">${researchData.research_topic}</p>
+                                        `;
+                                    }
+                                })
+                                .catch(error => console.error('Error loading research details:', error));
+                        });
+                    } else {
+                        historyList.innerHTML = '<p>No research history found.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading research history:', error);
+                    historyList.innerHTML = '<p>Error loading research history.</p>';
+                });
+        }
+
+        function loadResearch(crewid) {
+            console.log("Loading research for crew ID:", crewid);
+            document.getElementById('loading-spinner').style.display = 'block';
+            
+            // Close the history modal if it's open
+            closeHistory();
+            
+            // Close the dropdown
+            document.getElementById('historyDropdownContent').classList.remove('show');
+            
+            fetch(`/get_research/${crewid}`)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    if (!response.ok) {
+                        throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Received data:", data);
+                    
+                    // Force a deep inspection of the data structure
+                    console.log("Research plan type:", typeof data.research_plan);
+                    console.log("Research plan keys:", Object.keys(data.research_plan));
+                    console.log("Research plan stringify:", JSON.stringify(data.research_plan));
+                    
+                    console.log("Research results type:", typeof data.research_results);
+                    console.log("Research results keys:", Object.keys(data.research_results));
+                    console.log("Research results stringify:", JSON.stringify(data.research_results));
+                    
+                    // Check if we have valid data
+                    const hasResearchTopic = data.research_topic && data.research_topic.trim() !== '';
+                    const hasResearchPlan = data.research_plan && Object.keys(data.research_plan).length > 0;
+                    const hasResearchResults = data.research_results && Object.keys(data.research_results).length > 0;
+                    
+                    console.log("Data validation:", {
+                        hasResearchTopic,
+                        hasResearchPlan,
+                        hasResearchResults
+                    });
+                    
+                    // If we have no valid data, show an alert
+                    if (!hasResearchTopic && !hasResearchPlan && !hasResearchResults) {
+                        console.log("No valid data found");
+                        alert(`Research data for Crew ${crewid} appears to be corrupted or missing.
+
+Please check that the research data exists and is correctly formatted.
+
+If the problem persists, please contact the administrator for assistance.`);
+                    } else {
+                        // Update the crew ID badge
+                        const crewBadge = document.querySelector('.crew-id-badge');
+                        if (crewBadge) {
+                            crewBadge.textContent = 'Crew ' + data.crewid;
+                        }
+                        
+                        // Update CrewID in the system using the API instead of direct call
+                        fetch(`/set_crewid/${data.crewid}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                            }
+                        }).catch(error => console.error('Error updating crewID:', error));
+                        
+                        // Set research topic (use a default if empty)
+                        const topic = data.research_topic || "No topic available";
+                        document.getElementById('research_topic').value = topic;
+                        
+                        // Create HTML for the research plan
+                        let html = '<h2>Research Plan</h2>';
+                        
+                        // Handle research plan which might be an array or object
+                        if (Array.isArray(data.research_plan)) {
+                            if (data.research_plan.length > 0) {
+                                data.research_plan.forEach((description, index) => {
+                                    html += `
+                                        <div class="step">
+                                            <div class="step-number">${index + 1}</div>
+                                            <p class="research-step">${description}</p>
+                                        </div>
+                                    `;
+                                });
+                            } else {
+                                html += '<p>No research plan available</p>';
+                            }
+                        } else if (data.research_plan && Object.keys(data.research_plan).length > 0) {
+                            Object.entries(data.research_plan).forEach(([step, description], index) => {
+                                html += `
+                                    <div class="step">
+                                        <div class="step-number">${index + 1}</div>
+                                        <p class="research-step">${description}</p>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            html += '<p>No research plan available</p>';
+                        }
+                        
+                        // Create or update research plan container
+                        let container = document.getElementById('research-plan-container');
+                        if (!container) {
+                            container = document.createElement('div');
+                            container.id = 'research-plan-container';
+                            container.className = 'research-plan';
+                            document.querySelector('.container').appendChild(container);
+                        }
+                        container.innerHTML = html;
+                        
+                        // Add buttons if they don't exist
+                        let buttonContainer = document.querySelector('.button-container');
+                        if (!buttonContainer) {
+                            buttonContainer = document.createElement('div');
+                            buttonContainer.className = 'button-container';
+                            document.querySelector('.container').appendChild(buttonContainer);
+                        }
+                        
+                        buttonContainer.innerHTML = `
+                            <button onclick="regeneratePlan('${encodeURIComponent(topic)}')">Regenerate Plan</button>
+                            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+                        `;
+                        
+                        // If we have research results, display them
+                        console.log("Research results:", data.research_results);
+                        if (data.research_results && Object.keys(data.research_results).length > 0) {
+                            console.log("Displaying research results");
+                            displayResearchResults(data.research_results, data.research_plan, data.final_report);
+                        } else {
+                            console.log("No research results to display");
+                            // Clear any existing results
+                            let resultsContainer = document.getElementById('results-container');
+                            if (resultsContainer) {
+                                resultsContainer.innerHTML = '';
+                            }
+                            
+                            // Create a new results container with a message if it doesn't exist
+                            if (!resultsContainer) {
+                                resultsContainer = document.createElement('div');
+                                resultsContainer.id = 'results-container';
+                                document.querySelector('.container').appendChild(resultsContainer);
+                            }
+                            
+                            resultsContainer.innerHTML = `
+                                <div class="no-results-message">
+                                    <p>No research results available for this entry. Click "Run DeepSprint" to execute the research plan.</p>
+                                </div>
+                            `;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading research:', error);
+                    alert('Error loading research: ' + error.message);
+                })
+                .finally(() => {
+                    document.getElementById('loading-spinner').style.display = 'none';
+                });
+        }
+
+        function displayResearchResults(results, plan, finalReport) {
+            console.log("Displaying results:", results);
+            console.log("Plan:", plan);
+            console.log("Final report:", finalReport);
+            
+            // Create results container if it doesn't exist
+            let resultsContainer = document.getElementById('results-container');
+            if (!resultsContainer) {
+                resultsContainer = document.createElement('div');
+                resultsContainer.id = 'results-container';
+                document.querySelector('.container').appendChild(resultsContainer);
+            }
+            
+            // Clear existing results
+            resultsContainer.innerHTML = `
+                <div class="tabs">
+                    <div class="tab-buttons" id="tab-buttons"></div>
+                </div>
+                <div id="tab-contents"></div>
+            `;
+            
+            // Debug the results structure
+            console.log("Results type:", typeof results);
+            console.log("Results keys:", Object.keys(results));
+            
+            // Check if results is empty
+            if (!results || Object.keys(results).length === 0) {
+                console.log("No results to display");
+                return;
+            }
+            
+            // Add step tabs and content
+            Object.entries(results).forEach(([stepNum, result]) => {
+                // Convert string keys to integers if needed
+                const stepIndex = parseInt(stepNum);
+                const tabId = `step-${stepIndex}`;
+                
+                console.log(`Processing step ${stepIndex}, result:`, result);
+                
+                // Create tab button
+                const tabButton = document.createElement('button');
+                tabButton.className = 'tab-button';
+                tabButton.textContent = stepIndex;
+                tabButton.onclick = () => switchTab(tabId);
+                resultsContainer.querySelector('.tab-buttons').appendChild(tabButton);
+                
+                // Create tab content
+                const tabContent = document.createElement('div');
+                tabContent.className = 'tab-content';
+                tabContent.id = tabId;
+                
+                // Get the step description from the plan
+                let stepDescription = '';
+                if (Array.isArray(plan)) {
+                    stepDescription = plan[stepIndex - 1] || `Step ${stepIndex}`;
+                } else {
+                    // Try different key formats
+                    const stepKey = `step${stepIndex}`;
+                    stepDescription = plan[stepKey] || plan[`step_${stepIndex}`] || plan[stepIndex] || plan[stepIndex - 1] || `Step ${stepIndex}`;
+                }
+                
+                // Handle different result formats - HTML content needs to be inserted directly
+                let resultContent = '';
+                let executionTime = 'N/A';
+                
+                if (typeof result === 'string') {
+                    // If it's a string, it might be HTML content
+                    resultContent = result;
+                } else if (result && result.summary) {
+                    resultContent = result.summary;
+                    executionTime = result.execution_time || 'N/A';
+                } else if (result && result.result) {
+                    resultContent = result.result;
+                    executionTime = result.execution_time || 'N/A';
+                } else if (result && typeof result === 'object') {
+                    // Try to extract content from any available field
+                    resultContent = result.content || result.text || result.html || JSON.stringify(result);
+                } else {
+                    resultContent = JSON.stringify(result);
+                }
+                
+                // Add content to the step tab
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-item';
+                
+                // Create the HTML structure
+                const stepContentDiv = document.createElement('div');
+                stepContentDiv.className = 'step-content';
+                
+                // Add the step description
+                const stepHeader = document.createElement('h3');
+                stepHeader.textContent = stepDescription;
+                stepContentDiv.appendChild(stepHeader);
+                
+                // Add the result content - using innerHTML to properly render HTML
+                const resultContentDiv = document.createElement('div');
+                resultContentDiv.className = 'result-content';
+                resultContentDiv.innerHTML = resultContent;
+                stepContentDiv.appendChild(resultContentDiv);
+                
+                // Add execution time
+                const metaInfoDiv = document.createElement('div');
+                metaInfoDiv.className = 'meta-info';
+                metaInfoDiv.innerHTML = `<span class="execution-time">Execution time: ${executionTime}</span>`;
+                stepContentDiv.appendChild(metaInfoDiv);
+                
+                resultDiv.appendChild(stepContentDiv);
+                tabContent.appendChild(resultDiv);
+                resultsContainer.querySelector('#tab-contents').appendChild(tabContent);
+            });
+            
+            // Add final report tab if available
+            if (finalReport) {
+                const finalTabButton = document.createElement('button');
+                finalTabButton.className = 'tab-button';
+                finalTabButton.textContent = 'Final';
+                finalTabButton.onclick = () => switchTab('final-report');
+                resultsContainer.querySelector('.tab-buttons').appendChild(finalTabButton);
+                
+                const finalTabContent = document.createElement('div');
+                finalTabContent.className = 'tab-content';
+                finalTabContent.id = 'final-report';
+                
+                // Create the final report content - using innerHTML to properly render HTML
+                const finalReportDiv = document.createElement('div');
+                finalReportDiv.className = 'final-report';
+                
+                const finalReportHeader = document.createElement('h2');
+                finalReportHeader.textContent = 'Final Research Report';
+                finalReportDiv.appendChild(finalReportHeader);
+                
+                const downloadButton = document.createElement('button');
+                downloadButton.className = 'download-button';
+                downloadButton.onclick = downloadReports;
+                downloadButton.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                        <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                    </svg>
+                    Download Reports
+                `;
+                finalReportDiv.appendChild(downloadButton);
+                
+                const finalReportContent = document.createElement('div');
+                finalReportContent.className = 'result-content';
+                finalReportContent.innerHTML = finalReport;
+                finalReportDiv.appendChild(finalReportContent);
+                
+                finalTabContent.appendChild(finalReportDiv);
+                resultsContainer.querySelector('#tab-contents').appendChild(finalTabContent);
+                
+                // Show the final report tab by default
+                switchTab('final-report');
+            } else if (Object.keys(results).length > 0) {
+                // Show the first step tab if no final report
+                switchTab(`step-1`);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('settings-modal')) {
+                closeSettings();
+            }
+            if (event.target == document.getElementById('history-modal')) {
+                closeHistory();
+            }
+        }
+
+        function toggleHistoryDropdown() {
+            const dropdown = document.getElementById("historyDropdownContent");
+            dropdown.classList.toggle("show");
+            
+            // Load history items if dropdown is being shown
+            if (dropdown.classList.contains("show")) {
+                // Add loading indicator when we actually start loading
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '<div class="loading-history">Loading...</div>';
+                loadHistoryItems();
+            }
+        }
+
+        function loadHistoryItems() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '<div class="loading-history">Loading...</div>';
+            
+            fetch('/list_research')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.folders && data.folders.length > 0) {
+                        historyList.innerHTML = '';
+                        
+                        // Sort folders in reverse order (newest first)
+                        data.folders.sort().reverse();
+                        
+                        data.folders.forEach(crewid => {
+                            fetch(`/get_research/${crewid}`)
+                                .then(response => response.json())
+                                .then(researchData => {
+                                    const historyItem = document.createElement('div');
+                                    historyItem.className = 'history-item';
+                                    historyItem.setAttribute('data-crewid', crewid);
+                                    historyItem.setAttribute('data-topic', researchData.research_topic || '');
+                                    
+                                    const topic = researchData.research_topic || 'Unknown topic';
+                                    const truncatedTopic = topic.length > 60 ? topic.substring(0, 57) + '...' : topic;
+                                    
+                                    historyItem.innerHTML = `
+                                        <div class="history-item-content" onclick="loadResearch('${crewid}')">
+                                            <div class="history-crew-id">Crew ${crewid}</div>
+                                            <div class="history-topic">${truncatedTopic}</div>
+                                        </div>
+                                    `;
+                                    historyList.appendChild(historyItem);
+                                })
+                                .catch(error => {
+                                    console.error('Error loading research details:', error);
+                                    const historyItem = document.createElement('div');
+                                    historyItem.className = 'history-item';
+                                    historyItem.innerHTML = `
+                                        <div class="history-item-content">
+                                            <div class="history-crew-id">Crew ${crewid}</div>
+                                            <div class="history-topic error">Error loading details</div>
+                                        </div>
+                                    `;
+                                    historyList.appendChild(historyItem);
+                                });
+                        });
+                    } else {
+                        historyList.innerHTML = '<div class="no-history">No research history found</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading research history:', error);
+                    historyList.innerHTML = '<div class="error">Error loading history</div>';
+                });
+        }
+
+        function filterHistory() {
+            const input = document.getElementById('historySearch');
+            const filter = input.value.toLowerCase();
+            const historyItems = document.querySelectorAll('.history-item');
+            
+            historyItems.forEach(item => {
+                const crewid = item.getAttribute('data-crewid');
+                const topic = item.getAttribute('data-topic').toLowerCase();
+                
+                if (crewid.includes(filter) || topic.includes(filter)) {
+                    item.style.display = "";
+                } else {
+                    item.style.display = "none";
+                }
+            });
+        }
+
+        function regeneratePlan(topic) {
+            console.log("Regenerating plan for topic:", topic);
+            document.getElementById('research_topic').value = decodeURIComponent(topic);
+            submitForm();
+        }
+
+        // Call this when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            checkRequiredSettings();
+        });
     </script>
 </body>
 </html>
