@@ -19,6 +19,7 @@ from dotenv import load_dotenv, set_key
 import os  # Add this import for os.environ
 from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
+from utils.crewid import CrewID
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -56,7 +57,8 @@ def add_header(response):
 @app.route('/')
 def index():
     model_status = get_model_status()  # Get the model status
-    return render_template('index.html', test_mode=test_mode, model_status=model_status)
+    crewid = CrewID.get_crewid()  # Get the crew ID
+    return render_template('index.html', test_mode=test_mode, model_status=model_status, crewid=crewid)
 
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():

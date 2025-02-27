@@ -317,6 +317,20 @@ button:hover {
     letter-spacing: 0.5px;
 }
 
+.crew-id-badge {
+    display: inline-block;
+    background-color: #7f8c8d;
+    color: white;
+    font-size: 0.4em;
+    padding: 4px 8px;
+    border-radius: 12px;
+    vertical-align: middle;
+    margin-left: 10px;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+
 .settings-button {
     position: absolute;
     top: 20px;

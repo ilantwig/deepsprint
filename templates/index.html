@@ -55,6 +55,7 @@
             {% if model_status %}
             <span class="model-badge">{{ model_status }}</span>
             {% endif %}
+            <span class="crew-id-badge">Crew {{ crewid }}</span>
         </h1>
         <form method="POST" id="research-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -201,6 +202,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
                     },
                     body: JSON.stringify({ research_steps: currentSteps })
                 });
