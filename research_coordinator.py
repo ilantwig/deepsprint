@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(me
 logger = logging.getLogger(__name__)
 
 
-def build_research_plan(research_topic: str) -> str:
+def build_research_plan(research_topic: str) -> dict:
     """
     Builds a research plan based on the given topic.
     
@@ -21,15 +21,22 @@ def build_research_plan(research_topic: str) -> str:
         research_topic (str): The topic to create a research plan for
         
     Returns:
-        str: A formatted research plan
+        dict: A formatted research plan
     """
-    # entity_type_prompt=f"Given the following topic: [{research_topic}], provide a brief, one-sentence description of what type of entity this is likely to be. Do not include any details beyond the entity type. For example, 'A technology startup' or 'A non-profit organization'."
-    # entity_type_response=default_model.invoke(entity_type_prompt)
-    # entity_type_response=entity_type_response.content.strip().replace("'","\"")
-    # logger.debug(f"Response: {entity_type_response}")
-
     start_time = datetime.now()
     logger.debug(f"Starting research plan build at {start_time}")
+
+    # First, identify key entities in the research topic
+    entity_prompt = f"""Given the following research topic: [{research_topic}], identify the 2 most important entities (people, companies, organizations, products, etc.) that are central to this topic.
+    Your response must be in JSON format: {{"entity1":"<first key entity>", "entity2":"<second key entity>"}}. Your response must start with {{"""
+    
+    entity_response = default_model.invoke(entity_prompt)
+    entity_response = entity_response.content.strip()
+    entity_response = entity_response.replace("```json", "").replace("```", "")
+    logger.debug(f"Entity Response: {entity_response}")
+    
+    entities_json = json.loads(entity_response)
+    logger.debug(f"Entities json: {entities_json}")
 
     research_plan_prompt=f"""Example of a topic and the suggested research plan:
 I want a detailed report on all Israeli hostages held by Hamas in Gaza:
@@ -70,20 +77,41 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
 
     research_plan_json = json.loads(research_plan_response)
     
-    logger.debug(f"Research plan json: {research_plan_json}")
+    # Add entities and research topic to the research plan JSON
+    research_plan_json["entities"] = entities_json
+    research_plan_json["research_topic"] = research_topic
+    
+    # Save the research plan to a file
+    from utils.capabilities.File import File
+    crewid = CrewID.get_crewid()
+    
+    # # Save the research topic
+    # File.write_file(crewid, "research", "research_topic.txt", research_topic)
+    
+    # Save the research plan with entities
+    File.write_file(crewid, "", "research_plan.json", json.dumps(research_plan_json))
+    
+    # # Save entities for later use in deep_sprint_topic
+    # File.write_file(crewid, "research", "entities.json", json.dumps(entities_json))
+    
+    logger.debug(f"Research plan: {research_plan_json}")
+    logger.debug(f"Entities: {entities_json}")
 
     end_time = datetime.now()
     duration = end_time - start_time
     logger.debug(f"Research plan build completed in {duration}")
-    return research_plan_json 
+    
+    # Return only the plan part, not the entire result object
+    return research_plan_json
 
-def deep_sprint_topic(step: str, step_number: int) -> str:
+def deep_sprint_topic(step: str, step_number: int, entities: dict) -> str:
     """
     Executes a specific research step.
     
     Args:
         step (str): The step to execute
         step_number (int): The number of the current step
+        entities (dict): Key entities identified for the research topic
         
     Returns:
         str: The result of the research step
@@ -93,11 +121,17 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
     logger.debug(f"Starting step execution at {start_time}")
 
     logger.debug(f"Executing step: {step}")
+    
+    # Enhance search query with key entities
+    entity1 = entities.get("entity1", "")
+    entity2 = entities.get("entity2", "")
+    enhanced_query = f"{step} {entity1} {entity2}".strip()
+    logger.debug(f"Enhanced search query: {enhanced_query}")
 
     search = Search()
     
-    # Search with automatically determined relevant sites
-    sites = search.search(step)
+    # Search with automatically determined relevant sites and enhanced query
+    sites = search.search(enhanced_query)
     
     # Initialize results string
     all_results = ""
@@ -138,6 +172,7 @@ def deep_sprint_topic(step: str, step_number: int) -> str:
         topic_summary_prompot=f"""Date: {today}.
 You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
 Topic: {step}
+Key Entities: {entity1}, {entity2}
 Summary: {all_results}="""
         topic_summary_response=default_model.invoke(topic_summary_prompot)
         topic_summary_response=topic_summary_response.content.strip()
@@ -179,10 +214,20 @@ def generate_final_report(all_results: str) -> str:
     final_report_prompt=f"""Date: {today}.
 Create a verbose, detailed executive summary report in html from below content.  You must include MOST of the details from the original content. Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
 Content: {all_results}="""
+
     final_report_response=default_model.invoke(final_report_prompt)
     final_report_response=final_report_response.content.strip()
     final_report_response=final_report_response.replace("```html","").replace("```","")
     logger.debug(f"Final report response: {final_report_response}")
+
+    # Define the CSS style
+    css_style = get_report_css_style()
+
+    # Remove any existing style tags
+    final_report_response = re.sub(r'<style>.*?</style>', '', final_report_response, flags=re.DOTALL)
+    
+    # Add our custom style at the beginning of the HTML content
+    final_report_response = css_style + final_report_response
 
     # Save final report
     from utils.capabilities.File import File

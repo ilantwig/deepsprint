@@ -71,14 +71,22 @@ def regenerate_plan():
     CrewID.set_crewid(new_crewid)  # Set it as the current crewID
     
     research_plan = build_research_plan(research_topic)
-    return jsonify(research_plan=research_plan, 
+    
+    # Extract just the research steps, excluding entities and research_topic
+    research_steps = {k: v for k, v in research_plan.items() 
+                     if k.startswith('step') and not k in ['entities', 'research_topic']}
+    
+    # Return only the steps in the response, but keep entities separate
+    return jsonify(research_plan=research_steps, 
                   research_results=None, 
                   test_mode=test_mode,
-                  crewid=new_crewid)  # Include the new crewID in the response
+                  crewid=new_crewid,
+                  entities=research_plan.get('entities', {}))  # Include entities separately
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
+    entities = request.json.get('entities', {})
     result_queue = Queue()
     results_container = {'all_results': ''}
 
@@ -106,7 +114,7 @@ def execute_deep_sprint():
                     'execution_time': '1.2s'
                 }
             else:
-                result = deep_sprint_topic(step, step_num)
+                result = deep_sprint_topic(step, step_num,entities)
             
             result_dict = {
                 'step': step_num + 1,
