@@ -385,6 +385,10 @@
             if (selectedTab && selectedButton) {
                 selectedTab.classList.add('active');
                 selectedButton.classList.add('active');
+            } else {
+                console.error('Tab not found:', tabId);
+                console.log('Available tabs:', Array.from(document.querySelectorAll('.tab-content')).map(t => t.id));
+                console.log('Available buttons:', Array.from(document.querySelectorAll('.tab-button')).map(b => b.textContent));
             }
         }
 
