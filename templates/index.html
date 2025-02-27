@@ -116,6 +116,13 @@
             const topic = document.getElementById('research_topic').value;
             document.getElementById('loading-spinner').style.display = 'block';
             
+            // First, get the current crewID for debugging
+            fetch('/current_crewid')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Current crewID before regeneration:", data.crewid);
+                });
+            
             fetch('/regenerate', {
                 method: 'POST',
                 credentials: 'include',
@@ -128,6 +135,27 @@
             .then(response => response.json())
             .then(data => {
                 document.getElementById('loading-spinner').style.display = 'none';
+                
+                // Update the crew ID badge with the new crewID
+                if (data.crewid) {
+                    console.log("New crewID received:", data.crewid);
+                    const crewBadge = document.querySelector('.crew-id-badge');
+                    if (crewBadge) {
+                        crewBadge.textContent = 'Crew ' + data.crewid;
+                    }
+                    
+                    // Verify the crewID was actually changed by fetching it again
+                    fetch('/current_crewid')
+                        .then(response => response.json())
+                        .then(verifyData => {
+                            console.log("Current crewID after regeneration:", verifyData.crewid);
+                            if (verifyData.crewid !== data.crewid) {
+                                console.error("CrewID mismatch! UI shows:", data.crewid, "but server has:", verifyData.crewid);
+                            }
+                        });
+                } else {
+                    console.error("No crewID received in response");
+                }
                 
                 // Create HTML for the research plan
                 let html = '<h2>Research Plan</h2>';

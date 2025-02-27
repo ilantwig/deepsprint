@@ -33,3 +33,10 @@ class CrewID:
                 CrewID.crewid = str(random.randint(1000, 9999))
                 print(f"\n\n\n**************************************\ncrewid.py: Generated Crew ID: {CrewID.crewid}\n*******************************\n\n")
         return CrewID.crewid
+
+    @classmethod
+    def regenerate_crewid(cls):
+        """Generate a new crewID and update the stored value"""
+        new_crewid = cls.generate_crewid()
+        cls.set_crewid(new_crewid)
+        return new_crewid

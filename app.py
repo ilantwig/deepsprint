@@ -20,6 +20,8 @@ import os  # Add this import for os.environ
 from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
 from utils.crewid import CrewID
+import uuid
+import random
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -63,10 +65,16 @@ def index():
 @app.route('/regenerate', methods=['POST'])
 def regenerate_plan():
     research_topic = request.form['research_topic']
+    
+    # Force regeneration of a new 4-digit crewID
+    new_crewid = str(random.randint(1000, 9999))  # Generate a new 4-digit random ID
+    CrewID.set_crewid(new_crewid)  # Set it as the current crewID
+    
     research_plan = build_research_plan(research_topic)
     return jsonify(research_plan=research_plan, 
                   research_results=None, 
-                  test_mode=test_mode)
+                  test_mode=test_mode,
+                  crewid=new_crewid)  # Include the new crewID in the response
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
@@ -241,6 +249,11 @@ def check_settings():
     )
     
     return jsonify({'settings_valid': settings_valid})
+
+@app.route('/current_crewid', methods=['GET'])
+def get_current_crewid():
+    current_crewid = CrewID.get_crewid()
+    return jsonify({"crewid": current_crewid})
 
 if __name__ == '__main__':
     parser = ArgumentParser()
