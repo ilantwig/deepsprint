@@ -448,7 +448,7 @@ button:hover {
 .history-dropdown {
     position: absolute;
     top: 20px;
-    right: 120px;
+    right: 150px;
     display: inline-block;
     z-index: 1000;
 }
