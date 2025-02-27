@@ -48,7 +48,7 @@ LM_STUDIO_BASE_URL="http://localhost:1234/v1"
 # Using LM Studio models
 Make sure you started LM Studio server and it's running.
 <picture>
-   <img src="./static/lm-studio-server-mac.jpg"   style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+   <img src="./static/lm-studio-server-mac.jpg" width="90%"  style="border: 4px solid #ddd; border-radius: 8px; padding: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </picture>
 
 ## Running in test mode
