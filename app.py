@@ -17,14 +17,22 @@ from config import test_mode, set_test_mode
 from os import getenv
 from dotenv import load_dotenv, set_key
 import os  # Add this import for os.environ
+from flask_wtf.csrf import CSRFProtect
+from flask_session import Session
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": ["http://localhost:5000", "http://127.0.0.1:5000"], "supports_credentials": True}})
 
 load_dotenv()
+
+# Add these configurations after creating the Flask app but before Session(app)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = os.urandom(24)  # or a fixed secret key
+csrf = CSRFProtect(app)
+Session(app)
 
 def get_model_status():
     openai_model = getenv('OPENAI_MODEL_NAME')
