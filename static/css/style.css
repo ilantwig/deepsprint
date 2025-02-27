@@ -12,6 +12,11 @@ body {
     margin: 0 auto;
     padding: 20px;
     background-color: #f5f5f5;
+    position: relative;
+    overflow-x: hidden;
+    padding-right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 .container {
@@ -19,12 +24,21 @@ body {
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto !important;
+    position: relative;
+    overflow-x: hidden;
+    left: 0 !important;
+    transform: none !important;
 }
 
 h1 {
     color: #2c3e50;
     text-align: center;
     margin-bottom: 30px;
+    margin-top: 60px;
 }
 
 .form-group {
@@ -195,6 +209,10 @@ button:hover {
 
 .result-content {
     position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .meta-info {
@@ -208,6 +226,9 @@ button:hover {
     align-items: center;
     position: relative;
     overflow: visible;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 .tab-buttons {
@@ -277,6 +298,11 @@ button:hover {
     padding: 24px;
     background-color: #fff;
     border-radius: 0 0 4px 4px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    left: 0 !important;
+    transform: none !important;
 }
 
 .tab-content.active {
@@ -341,6 +367,7 @@ button:hover {
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    z-index: 1000;
 }
 
 .settings-modal {
@@ -421,8 +448,9 @@ button:hover {
 .history-dropdown {
     position: absolute;
     top: 20px;
-    right: 200px; /* Increase this value to move it further left from the settings button */
+    right: 120px;
     display: inline-block;
+    z-index: 1000;
 }
 
 .history-dropdown-btn {
@@ -525,4 +553,22 @@ button:hover {
 
 .error {
     color: #e74c3c;
+}
+
+#results-container {
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    margin: 0 auto;
+    position: relative;
+    left: 0 !important;
+    transform: none !important;
+}
+
+html {
+    overflow-y: scroll;
+    width: 100%;
+    overflow-x: hidden;
+    margin-right: 0 !important;
+    padding-right: 0 !important;
 } 
