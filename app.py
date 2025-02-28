@@ -220,12 +220,19 @@ def get_research(crewid):
             plan_file = crew_dir / 'research_plan.json'  # Then try without underscore
             
         research_plan = {}
+        entities = {}
         if plan_file.exists():
             try:
                 with open(plan_file, 'r') as f:
                     content = f.read().strip()
                     if content:  # Check if file is not empty
-                        research_plan = json.loads(content)
+                        full_plan = json.loads(content)
+                        # Extract entities separately
+                        if 'entities' in full_plan:
+                            entities = full_plan.pop('entities')
+                        # Filter out non-step fields
+                        research_plan = {k: v for k, v in full_plan.items() 
+                                        if k.startswith('step') or k == 'research_topic'}
                     else:
                         logger.warning(f"Empty research plan file for crew {crewid}")
             except json.JSONDecodeError as e:
@@ -252,7 +259,7 @@ def get_research(crewid):
         
         # If no topic found, try to get it from research_plan.json
         if not research_topic and 'research_topic' in research_plan:
-            research_topic = research_plan['research_topic']
+            research_topic = research_plan.pop('research_topic')  # Remove from plan after extracting
         
         # Get research results
         results_file = crew_dir / 'research_results.json'
@@ -327,6 +334,7 @@ def get_research(crewid):
             'research_plan': research_plan,
             'research_results': research_results,
             'final_report': final_report,
+            'entities': entities,  # Include entities separately
             'crewid': crewid
         })
     except Exception as e:

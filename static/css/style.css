@@ -21,7 +21,9 @@ body {
 
 .container {
     background-color: white;
-    padding: 30px;
+    padding: 10px;
+    padding-top: 5px;
+    padding-bottom: 0px;
     border-radius: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 100%;
@@ -58,7 +60,7 @@ textarea {
     border: 1px solid #ddd;
     border-radius: 4px;
     resize: vertical;
-    max-height: 20px;
+    max-height: 50px;
     font-size: 16px;
 }
 

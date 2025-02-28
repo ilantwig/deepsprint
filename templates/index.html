@@ -72,16 +72,6 @@
     </div>
 
     <div class="container">
-        <h1>
-            Research Plan Generator
-            {% if test_mode %}
-            <span class="test-mode-badge">Test Mode</span>
-            {% endif %}
-            {% if model_status %}
-            <span class="model-badge">{{ model_status }}</span>
-            {% endif %}
-            <span class="crew-id-badge">Crew {{ crewid }}</span>
-        </h1>
         <form method="POST" id="research-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
@@ -559,13 +549,13 @@
                     console.log("Received data:", data);
                     
                     // Force a deep inspection of the data structure
-                    console.log("Research plan type:", typeof data.research_plan);
-                    console.log("Research plan keys:", Object.keys(data.research_plan));
-                    console.log("Research plan stringify:", JSON.stringify(data.research_plan));
+                    // console.log("Research plan type:", typeof data.research_plan);
+                    // console.log("Research plan keys:", Object.keys(data.research_plan));
+                    // console.log("Research plan stringify:", JSON.stringify(data.research_plan));
                     
-                    console.log("Research results type:", typeof data.research_results);
-                    console.log("Research results keys:", Object.keys(data.research_results));
-                    console.log("Research results stringify:", JSON.stringify(data.research_results));
+                    // console.log("Research results type:", typeof data.research_results);
+                    // console.log("Research results keys:", Object.keys(data.research_results));
+                    // console.log("Research results stringify:", JSON.stringify(data.research_results));
                     
                     // Check if we have valid data
                     const hasResearchTopic = data.research_topic && data.research_topic.trim() !== '';
@@ -699,7 +689,7 @@ If the problem persists, please contact the administrator for assistance.`);
         function displayResearchResults(results, plan, finalReport) {
             console.log("Displaying results:", results);
             console.log("Plan:", plan);
-            console.log("Final report:", finalReport);
+            // console.log("Final report:", finalReport);
             
             // Create results container if it doesn't exist
             let resultsContainer = document.getElementById('results-container');
@@ -733,7 +723,7 @@ If the problem persists, please contact the administrator for assistance.`);
                 const stepIndex = parseInt(stepNum);
                 const tabId = `step-${stepIndex}`;
                 
-                console.log(`Processing step ${stepIndex}, result:`, result);
+                // console.log(`Processing step ${stepIndex}, result:`, result);
                 
                 // Create tab button
                 const tabButton = document.createElement('button');
@@ -752,9 +742,21 @@ If the problem persists, please contact the administrator for assistance.`);
                 if (Array.isArray(plan)) {
                     stepDescription = plan[stepIndex - 1] || `Step ${stepIndex}`;
                 } else {
-                    // Try different key formats
+                    // Try different key formats - only look for actual step keys
                     const stepKey = `step${stepIndex}`;
-                    stepDescription = plan[stepKey] || plan[`step_${stepIndex}`] || plan[stepIndex] || plan[stepIndex - 1] || `Step ${stepIndex}`;
+                    
+                    // Filter out non-step fields and only use valid step descriptions
+                    if (plan[stepKey] && typeof plan[stepKey] === 'string') {
+                        stepDescription = plan[stepKey];
+                    } else if (plan[`step_${stepIndex}`] && typeof plan[`step_${stepIndex}`] === 'string') {
+                        stepDescription = plan[`step_${stepIndex}`];
+                    } else if (plan[stepIndex] && typeof plan[stepIndex] === 'string') {
+                        stepDescription = plan[stepIndex];
+                    } else if (plan[stepIndex - 1] && typeof plan[stepIndex - 1] === 'string') {
+                        stepDescription = plan[stepIndex - 1];
+                    } else {
+                        stepDescription = `Step ${stepIndex}`;
+                    }
                 }
                 
                 // Handle different result formats - HTML content needs to be inserted directly

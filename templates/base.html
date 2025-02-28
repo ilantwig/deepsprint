@@ -9,6 +9,9 @@
 <body>
     <header>
         <h1>DeepSprint</h1>
+        
+
+
         <div class="social-buttons">
             <!-- GitHub Star Button -->
             <a class="github-button" 
@@ -22,6 +25,12 @@
                class="twitter-follow-button" 
                data-size="large" 
                data-show-count="true">Follow @itwig</a>
+               {% if test_mode %}
+               <span class="test-mode-badge">Test Mode</span>
+               {% endif %}
+               {% if model_status %}
+               <span class="model-badge">{{ model_status }}</span>
+               {% endif %}          <span class="crew-id-badge">Crew {{ crewid }}</span>
         </div>
     </header>
 
