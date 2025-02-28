@@ -1,4 +1,6 @@
 flask
 flask-cors
+flask-wtf
+flask-session
 crewai-tools
 langchain-openai
