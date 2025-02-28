@@ -10,6 +10,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     max-width: 1300px;
+    min-height: 450px;
     margin: 0 auto;
     padding: 20px;
     background-color: #f5f5f5;
@@ -506,7 +507,7 @@ button:hover {
     position: absolute;
     right: 0;
     background-color: white;
-    min-width: 300px;
+    min-width: 350px;
     max-width: 400px;
     max-height: 400px;
     overflow-y: auto;
@@ -514,6 +515,7 @@ button:hover {
     z-index: 1000;
     border-radius: 8px;
     margin-top: 5px;
+    overflow-x: hidden;
 }
 
 .history-dropdown-content.show {
