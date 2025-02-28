@@ -219,6 +219,9 @@ button:hover {
 
 .meta-info {
     margin-top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .tabs {
@@ -573,4 +576,41 @@ html {
     overflow-x: hidden;
     margin-right: 0 !important;
     padding-right: 0 !important;
+}
+
+.report-actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.download-pdf-button {
+    background-color: #e67e22;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.download-pdf-button:hover {
+    background-color: #d35400;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.result-header h3 {
+    margin: 0;
+    flex: 1;
 } 

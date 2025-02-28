@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Plan Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <button onclick="openSettings()" class="settings-button">
@@ -290,13 +291,22 @@
                                 finalTabContent.innerHTML = `
                                     <div class="final-report">
                                         <h2>Final Research Report</h2>
-                                        <button onclick="downloadReports()" class="download-button">
-                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
-                                                <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
-                                            </svg>
-                                            Download Reports
-                                        </button>
+                                        <div class="report-actions">
+                                            <button onclick="downloadAllPDF()" class="download-button">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                                </svg>
+                                                Download All as PDF
+                                            </button>
+                                            <button onclick="downloadReports()" class="download-button">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                                </svg>
+                                                Download as Text
+                                            </button>
+                                        </div>
                                         <div class="result-content">
                                             ${result.final_report}
                                         </div>
@@ -326,16 +336,27 @@
                                 resultDiv.className = 'result-item';
                                 resultDiv.innerHTML = `
                                     <div class="step-content">
-                                        <h3>${currentSteps[result.step - 1]}</h3>
-                                        ${result.error ? 
-                                            `<p class="error">${result.error}</p>` :
-                                            `<div class="result-content">
-                                                <p>${result.result}</p>
-                                            </div>
-                                            <div class="meta-info">
-                                                <span class="execution-time">Execution time: ${result.execution_time}</span>
-                                            </div>`
-                                        }
+                                        <div class="result-header">
+                                            <h3>${currentSteps[result.step - 1]}</h3>
+                                            <button onclick="downloadPDF(${result.step})" class="download-pdf-button">
+                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                                </svg>
+                                                Download PDF
+                                            </button>
+                                        </div>
+                                        <div class="result-content">
+                                            ${result.error ? 
+                                                `<p class="error">${result.error}</p>` :
+                                                `<div class="result-content">
+                                                    <p>${result.result}</p>
+                                                </div>
+                                                <div class="meta-info">
+                                                    <span class="execution-time">Execution time: ${result.execution_time}</span>
+                                                </div>`
+                                            }
+                                        </div>
                                     </div>
                                 `;
                                 tabContent.appendChild(resultDiv);
@@ -689,7 +710,6 @@ If the problem persists, please contact the administrator for assistance.`);
         function displayResearchResults(results, plan, finalReport) {
             console.log("Displaying results:", results);
             console.log("Plan:", plan);
-            // console.log("Final report:", finalReport);
             
             // Create results container if it doesn't exist
             let resultsContainer = document.getElementById('results-container');
@@ -719,11 +739,8 @@ If the problem persists, please contact the administrator for assistance.`);
             
             // Add step tabs and content
             Object.entries(results).forEach(([stepNum, result]) => {
-                // Convert string keys to integers if needed
                 const stepIndex = parseInt(stepNum);
                 const tabId = `step-${stepIndex}`;
-                
-                // console.log(`Processing step ${stepIndex}, result:`, result);
                 
                 // Create tab button
                 const tabButton = document.createElement('button');
@@ -742,10 +759,7 @@ If the problem persists, please contact the administrator for assistance.`);
                 if (Array.isArray(plan)) {
                     stepDescription = plan[stepIndex - 1] || `Step ${stepIndex}`;
                 } else {
-                    // Try different key formats - only look for actual step keys
                     const stepKey = `step${stepIndex}`;
-                    
-                    // Filter out non-step fields and only use valid step descriptions
                     if (plan[stepKey] && typeof plan[stepKey] === 'string') {
                         stepDescription = plan[stepKey];
                     } else if (plan[`step_${stepIndex}`] && typeof plan[`step_${stepIndex}`] === 'string') {
@@ -759,12 +773,11 @@ If the problem persists, please contact the administrator for assistance.`);
                     }
                 }
                 
-                // Handle different result formats - HTML content needs to be inserted directly
+                // Handle different result formats
                 let resultContent = '';
                 let executionTime = 'N/A';
                 
                 if (typeof result === 'string') {
-                    // If it's a string, it might be HTML content
                     resultContent = result;
                 } else if (result && result.summary) {
                     resultContent = result.summary;
@@ -773,38 +786,35 @@ If the problem persists, please contact the administrator for assistance.`);
                     resultContent = result.result;
                     executionTime = result.execution_time || 'N/A';
                 } else if (result && typeof result === 'object') {
-                    // Try to extract content from any available field
                     resultContent = result.content || result.text || result.html || JSON.stringify(result);
                 } else {
                     resultContent = JSON.stringify(result);
                 }
                 
-                // Add content to the step tab
+                // Add content to the step tab with download button at the top
                 const resultDiv = document.createElement('div');
                 resultDiv.className = 'result-item';
+                resultDiv.innerHTML = `
+                    <div class="step-content">
+                        <div class="result-header">
+                            <h3>${stepDescription}</h3>
+                            <button onclick="downloadPDF(${stepIndex})" class="download-pdf-button">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                </svg>
+                                Download PDF
+                            </button>
+                        </div>
+                        <div class="result-content">
+                            ${resultContent}
+                        </div>
+                        <div class="meta-info">
+                            <span class="execution-time">Execution time: ${executionTime}</span>
+                        </div>
+                    </div>
+                `;
                 
-                // Create the HTML structure
-                const stepContentDiv = document.createElement('div');
-                stepContentDiv.className = 'step-content';
-                
-                // Add the step description
-                const stepHeader = document.createElement('h3');
-                stepHeader.textContent = stepDescription;
-                stepContentDiv.appendChild(stepHeader);
-                
-                // Add the result content - using innerHTML to properly render HTML
-                const resultContentDiv = document.createElement('div');
-                resultContentDiv.className = 'result-content';
-                resultContentDiv.innerHTML = resultContent;
-                stepContentDiv.appendChild(resultContentDiv);
-                
-                // Add execution time
-                const metaInfoDiv = document.createElement('div');
-                metaInfoDiv.className = 'meta-info';
-                metaInfoDiv.innerHTML = `<span class="execution-time">Execution time: ${executionTime}</span>`;
-                stepContentDiv.appendChild(metaInfoDiv);
-                
-                resultDiv.appendChild(stepContentDiv);
                 tabContent.appendChild(resultDiv);
                 resultsContainer.querySelector('#tab-contents').appendChild(tabContent);
             });
@@ -821,30 +831,32 @@ If the problem persists, please contact the administrator for assistance.`);
                 finalTabContent.className = 'tab-content';
                 finalTabContent.id = 'final-report';
                 
-                // Create the final report content - using innerHTML to properly render HTML
                 const finalReportDiv = document.createElement('div');
                 finalReportDiv.className = 'final-report';
-                
-                const finalReportHeader = document.createElement('h2');
-                finalReportHeader.textContent = 'Final Research Report';
-                finalReportDiv.appendChild(finalReportHeader);
-                
-                const downloadButton = document.createElement('button');
-                downloadButton.className = 'download-button';
-                downloadButton.onclick = downloadReports;
-                downloadButton.innerHTML = `
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
-                        <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
-                    </svg>
-                    Download Reports
+                finalReportDiv.innerHTML = `
+                    <div class="result-header">
+                        <h2>Final Research Report</h2>
+                        <div class="report-actions">
+                            <button onclick="downloadAllPDF()" class="download-button">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                </svg>
+                                Download All as PDF
+                            </button>
+                            <button onclick="downloadReports()" class="download-button">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                </svg>
+                                Download as Text
+                            </button>
+                        </div>
+                    </div>
+                    <div class="result-content">
+                        ${finalReport}
+                    </div>
                 `;
-                finalReportDiv.appendChild(downloadButton);
-                
-                const finalReportContent = document.createElement('div');
-                finalReportContent.className = 'result-content';
-                finalReportContent.innerHTML = finalReport;
-                finalReportDiv.appendChild(finalReportContent);
                 
                 finalTabContent.appendChild(finalReportDiv);
                 resultsContainer.querySelector('#tab-contents').appendChild(finalTabContent);
@@ -969,6 +981,109 @@ If the problem persists, please contact the administrator for assistance.`);
         document.addEventListener('DOMContentLoaded', function() {
             checkRequiredSettings();
         });
+
+        function downloadPDF(stepNumber) {
+            // Get the content
+            const stepContent = document.getElementById(`step-${stepNumber}`);
+            if (!stepContent) {
+                console.error('Step content not found:', stepNumber);
+                return;
+            }
+            
+            // Extract the content
+            const title = stepContent.querySelector('h3')?.textContent || `Step ${stepNumber}`;
+            const content = stepContent.querySelector('.result-content')?.innerHTML || '';
+            
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Research Step ${stepNumber}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                        h1 { color: #2c3e50; margin-bottom: 20px; }
+                        .content { margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>${title}</h1>
+                    <div class="content">${content}</div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            // Let the user manually print
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 300);
+        }
+
+        function downloadAllPDF() {
+            // Get research topic
+            const topic = document.getElementById('research_topic').value;
+            
+            // Collect all content
+            let allContent = '';
+            
+            // Add all step results
+            document.querySelectorAll('.tab-content').forEach((tab, index) => {
+                if (tab.id !== 'final-report') {
+                    const title = tab.querySelector('h3')?.textContent || `Step ${index + 1}`;
+                    const content = tab.querySelector('.result-content')?.innerHTML || '';
+                    
+                    allContent += `
+                        <div class="step-section">
+                            <h2>Step ${index + 1}: ${title}</h2>
+                            <div class="step-content">${content}</div>
+                        </div>
+                    `;
+                }
+            });
+            
+            // Add final report
+            const finalReport = document.querySelector('#final-report .result-content')?.innerHTML || '';
+            if (finalReport) {
+                allContent += `
+                    <div class="final-section">
+                        <h2>Final Research Report</h2>
+                        <div class="final-content">${finalReport}</div>
+                    </div>
+                `;
+            }
+            
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Complete Research Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                        h1 { color: #2c3e50; margin-bottom: 30px; }
+                        h2 { color: #2c3e50; margin-top: 40px; margin-bottom: 20px; }
+                        .step-section { margin-bottom: 30px; }
+                        .final-section { margin-top: 50px; border-top: 2px solid #eee; padding-top: 30px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Research Topic: ${topic}</h1>
+                    ${allContent}
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            
+            // Let the user manually print
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+            }, 300);
+        }
     </script>
 </body>
 </html>
