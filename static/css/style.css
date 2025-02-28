@@ -271,6 +271,10 @@ button:hover {
     flex-shrink: 0;
 }
 
+.tab-buttons button {
+    order: attr(data-step-number);
+}
+
 .tab-buttons::-webkit-scrollbar {
     display: none;
     height: 0;
@@ -631,4 +635,69 @@ html {
 .result-header h3 {
     margin: 0;
     flex: 1;
+}
+
+.processing-indicator {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+
+.processing-message {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 15px;
+    color: #666;
+}
+
+.step-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #3498db;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.tab-button.completed-step {
+    background-color: #2ecc71;
+}
+
+.tab-button.completed-step:hover {
+    background-color: #27ae60;
+}
+
+.tab-button.completed-step.active {
+    background-color: #27ae60;
+}
+
+.tab-button.completed-step.active::after {
+    background-color: #27ae60;
+}
+
+.tab-button.final-report-tab {
+    background-color: #9b59b6;
+    width: auto;
+    border-radius: 12px;
+    padding: 0 10px;
+}
+
+.tab-button.final-report-tab:hover {
+    background-color: #8e44ad;
+}
+
+.tab-button.final-report-tab.active {
+    background-color: #8e44ad;
+}
+
+.tab-button.final-report-tab.active::after {
+    background-color: #8e44ad;
 } 

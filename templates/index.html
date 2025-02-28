@@ -221,7 +221,8 @@
         }
 
         async function executeDeepSprint() {
-            document.getElementById('loading-spinner').style.display = 'block';
+            // Hide the main spinner
+            document.getElementById('loading-spinner').style.display = 'none';
             
             // Get the CURRENT research steps from the page
             const currentSteps = Array.from(document.querySelectorAll('#research-plan-container .research-step'))
@@ -229,7 +230,6 @@
             
             // If no steps are found, return early
             if (currentSteps.length === 0) {
-                document.getElementById('loading-spinner').style.display = 'none';
                 console.error('No research steps found');
                 return;
             }
@@ -249,6 +249,61 @@
                 </div>
                 <div id="tab-contents"></div>
             `;
+
+            // Create tab buttons and content placeholders for all steps
+            currentSteps.forEach((step, index) => {
+                const stepNumber = index + 1;
+                const tabId = `step-${stepNumber}`;
+                
+                // Create tab button
+                const tabButton = document.createElement('button');
+                tabButton.className = 'tab-button';
+                tabButton.textContent = stepNumber;
+                tabButton.onclick = () => switchTab(tabId);
+                resultsContainer.querySelector('.tab-buttons').appendChild(tabButton);
+                
+                // Create tab content with processing indicator
+                const tabContent = document.createElement('div');
+                tabContent.className = 'tab-content';
+                tabContent.id = tabId;
+                
+                tabContent.innerHTML = `
+                    <div class="processing-indicator" id="processing-step-${stepNumber}">
+                        <h3>${step}</h3>
+                        <div class="processing-message">
+                            <div class="step-spinner"></div>
+                            <div>Processing step ${stepNumber}...</div>
+                        </div>
+                    </div>
+                `;
+                
+                resultsContainer.querySelector('#tab-contents').appendChild(tabContent);
+            });
+            
+            // Create a placeholder for the final report
+            const finalTabButton = document.createElement('button');
+            finalTabButton.className = 'tab-button final-report-tab';
+            finalTabButton.textContent = 'Final';
+            finalTabButton.onclick = () => switchTab('final-report');
+            resultsContainer.querySelector('.tab-buttons').appendChild(finalTabButton);
+
+            // Create final report tab content with processing indicator
+            const finalTabContent = document.createElement('div');
+            finalTabContent.className = 'tab-content';
+            finalTabContent.id = 'final-report';
+            finalTabContent.innerHTML = `
+                <div class="processing-indicator" id="processing-final-report">
+                    <h3>Final Research Report</h3>
+                    <div class="processing-message">
+                        <div class="step-spinner"></div>
+                        <div>Generating final report...</div>
+                    </div>
+                </div>
+            `;
+            resultsContainer.querySelector('#tab-contents').appendChild(finalTabContent);
+            
+            // Show the first tab
+            switchTab('step-1');
 
             try {
                 const response = await fetch('/execute_deep_sprint', {
@@ -278,60 +333,61 @@
                         try {
                             const result = JSON.parse(resultStr);
                             if (result.final_report) {
-                                // Create final report tab
-                                const finalTabButton = document.createElement('button');
-                                finalTabButton.className = 'tab-button';
-                                finalTabButton.textContent = 'Final';
-                                finalTabButton.onclick = () => switchTab('final-report');
-                                resultsContainer.querySelector('.tab-buttons').appendChild(finalTabButton);
-
-                                const finalTabContent = document.createElement('div');
-                                finalTabContent.className = 'tab-content';
-                                finalTabContent.id = 'final-report';
-                                finalTabContent.innerHTML = `
-                                    <div class="final-report">
-                                        <h2>Final Research Report</h2>
-                                        <div class="report-actions">
-                                            <button onclick="downloadAllPDF()" class="download-button">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
-                                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
-                                                </svg>
-                                                Download All as PDF
-                                            </button>
-                                            <button onclick="downloadReports()" class="download-button">
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
-                                                    <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
-                                                </svg>
-                                                Download as Text
-                                            </button>
-                                        </div>
-                                        <div class="result-content">
-                                            ${result.final_report}
-                                        </div>
+                                // Remove the processing indicator for the final report
+                                const processingIndicator = document.getElementById('processing-final-report');
+                                if (processingIndicator) {
+                                    processingIndicator.remove();
+                                }
+                                
+                                // Get the final report tab content
+                                const finalTabContent = document.getElementById('final-report');
+                                
+                                // Add the final report content
+                                const finalReportDiv = document.createElement('div');
+                                finalReportDiv.className = 'final-report';
+                                finalReportDiv.innerHTML = `
+                                    <h2>Final Research Report</h2>
+                                    <div class="report-actions">
+                                        <button onclick="downloadAllPDF()" class="download-button">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                            </svg>
+                                            Download All as PDF
+                                        </button>
+                                        <button onclick="downloadReports()" class="download-button">
+                                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M8 12L3 7H6V1H10V7H13L8 12Z" fill="currentColor"/>
+                                                <path d="M14 14H2V11H4V12H12V11H14V14Z" fill="currentColor"/>
+                                            </svg>
+                                            Download as Text
+                                        </button>
+                                    </div>
+                                    <div class="result-content">
+                                        ${result.final_report}
                                     </div>
                                 `;
-                                resultsContainer.querySelector('#tab-contents').appendChild(finalTabContent);
+                                finalTabContent.appendChild(finalReportDiv);
                                 switchTab('final-report');
                             } else {
-                                // Create step tab if it doesn't exist
-                                const tabId = `step-${result.step}`;
-                                if (!document.getElementById(tabId)) {
-                                    const tabButton = document.createElement('button');
-                                    tabButton.className = 'tab-button';
-                                    tabButton.textContent = result.step;
-                                    tabButton.onclick = () => switchTab(tabId);
-                                    resultsContainer.querySelector('.tab-buttons').appendChild(tabButton);
-
-                                    const tabContent = document.createElement('div');
-                                    tabContent.className = 'tab-content';
-                                    tabContent.id = tabId;
-                                    resultsContainer.querySelector('#tab-contents').appendChild(tabContent);
+                                // Remove the processing indicator for this step
+                                const processingIndicator = document.getElementById(`processing-step-${result.step}`);
+                                if (processingIndicator) {
+                                    processingIndicator.remove();
                                 }
-
+                                
+                                // Get the tab content for this step
+                                const tabContent = document.getElementById(`step-${result.step}`);
+                                
+                                // Mark the tab button as completed (green)
+                                const tabButtons = document.querySelectorAll('.tab-button');
+                                tabButtons.forEach(button => {
+                                    if (button.textContent === result.step.toString()) {
+                                        button.classList.add('completed-step');
+                                    }
+                                });
+                                
                                 // Add content to the step tab
-                                const tabContent = document.getElementById(tabId);
                                 const resultDiv = document.createElement('div');
                                 resultDiv.className = 'result-item';
                                 resultDiv.innerHTML = `
@@ -360,6 +416,11 @@
                                     </div>
                                 `;
                                 tabContent.appendChild(resultDiv);
+                                
+                                // Switch to the next step if available
+                                if (result.step < currentSteps.length) {
+                                    switchTab(`step-${result.step + 1}`);
+                                }
                             }
                         } catch (e) {
                             console.error('Error parsing result:', e);
@@ -369,8 +430,6 @@
             } catch (error) {
                 console.error('Error:', error);
                 resultsContainer.querySelector('#tab-contents').innerHTML = '<p class="error">Error processing research steps</p>';
-            } finally {
-                document.getElementById('loading-spinner').style.display = 'none';
             }
         }
 
@@ -822,7 +881,7 @@ If the problem persists, please contact the administrator for assistance.`);
             // Add final report tab if available
             if (finalReport) {
                 const finalTabButton = document.createElement('button');
-                finalTabButton.className = 'tab-button';
+                finalTabButton.className = 'tab-button final-report-tab';
                 finalTabButton.textContent = 'Final';
                 finalTabButton.onclick = () => switchTab('final-report');
                 resultsContainer.querySelector('.tab-buttons').appendChild(finalTabButton);
