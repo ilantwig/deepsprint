@@ -101,27 +101,14 @@ Your response must start with {{"""
         """
         logger.debug(f"Starting search for '{_query}' with limit {limit} and time range {time_range}")
 
-        # relevant_sites, suggested_time_range = Search.get_relevant_sites(_query)
-        
-        
-        # Use provided time_range if specified, otherwise use suggested_time_range
-        # final_time_range = suggested_time_range or time_range
-
-
-
-
-
         query=Search.optimize_query(_query)
         logger.debug(f"Optimized search query: {query}")
 
-        # logger.debug(f"Starting search for '{query}' with limit {limit} and time range {time_range}")
         url = "https://google.serper.dev/search"
         payload = json.dumps({
             'q': query,
             'num': limit #put limit to accept the requestors limit
-            # 'tbs': Search._get_tbs(time_range)  # Use the _get_tbs function
         })
-        # logger.debug(f"Payload: {payload}")
         headers = {
             'X-API-KEY': os.getenv("SERPER_API_KEY"),
             'Content-Type': 'application/json'
@@ -129,17 +116,19 @@ Your response must start with {{"""
         
         response = requests.post(url, headers=headers, data=payload)
         logger.debug(f"Search API call Response: {response.text}")
-        # logger.debug(f"Response: {response}")
-        # logger.debug(f"Trying to fetch the 'organic' results from the response")
-        results = response.json()['organic']
+        results = response.json().get('organic', [])
         logger.debug(f"Results: {results}")
         
         formatted_results = []
         for result in results:
-            snippet=result["snippet"].replace("\'", "&#39;")
-            formatted_results.append(
-                f'{result["link"]}'
-            )
+            # Only add the link if it exists and is not empty
+            if 'link' in result and result['link']:
+                formatted_results.append(result["link"])
+        
+        # Check if we have any valid results
+        if not formatted_results and 'organic' in response.json():
+            logger.warning(f"No valid links found in search results. Raw results: {response.json()['organic']}")
+        
         logger.debug(f"Formatted results: {formatted_results}")
         logger.debug("Search is done")
         return formatted_results
@@ -170,18 +159,18 @@ Your response must start with {{"""
         }
         
         response = requests.post(url, headers=headers, data=payload)
-        results = response.json()['news']
+        results = response.json().get('news', [])
         
         formatted_results = []
         for result in results:
-            snippet=result["snippet"].replace("\'", "&#39;")
-            # formatted_results.append(
-            #     f"{result['title']}\n{snippet}\n{result['link']}\n{result['date']}\n\n"
-            # )
-            formatted_results.append(
-                f"{result['link']}"
-            )
+            # Only add the link if it exists and is not empty
+            if 'link' in result and result['link']:
+                formatted_results.append(result['link'])
         
+        # Check if we have any valid results
+        if not formatted_results and 'news' in response.json():
+            logger.warning(f"No valid links found in news results. Raw results: {response.json()['news']}")
+            
         return formatted_results
 
     @staticmethod

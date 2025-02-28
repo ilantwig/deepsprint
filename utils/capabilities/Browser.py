@@ -26,11 +26,24 @@ class Browser:
         sites_scrapped.append(url)
         counter+=1
         logger.debug(f"Scraping number {counter}: Attempting to open URL: {url}")
-        # text=selenium_tool._run(website_url=url)
-        text=tool._run(website_url=url)
-        # logger.debug(f"Raw scraping: {text}")
-        summarized_text = TextUtils.perform_task(text, "Create a detailed summary of the provided content. Do not miss out on any fact/detail. Keep links, dates in tact.")
-        logger.debug(f"Summarized text final length: {len(summarized_text)} characters")
-        logger.debug(f"\\nn--------------------------------------------------\nSummary: {summarized_text}\n---------------------------\n\n")
+        
+        try:
+            # text=selenium_tool._run(website_url=url)
+            text = tool._run(website_url=url)
+            
+            # Check if the scraped text is empty or too short
+            if not text or len(text) < 50:
+                logger.warning(f"Scraped content from {url} is too short or empty: {text}")
+                return f"Unable to extract meaningful content from {url}. The page might be protected, require JavaScript, or contain no accessible text content."
+                
+            # logger.debug(f"Raw scraping: {text}")
+            summarized_text = TextUtils.perform_task(text, "Create a detailed summary of the provided content. Do not miss out on any fact/detail. Keep links, dates in tact.")
+            logger.debug(f"Summarized text final length: {len(summarized_text)} characters")
+            logger.debug(f"\\nn--------------------------------------------------\nSummary: {summarized_text}\n---------------------------\n\n")
 
-        return summarized_text.replace("'","&#39;")
+            return summarized_text.replace("'","&#39;")
+            
+        except Exception as e:
+            error_message = f"Error scraping {url}: {str(e)}"
+            logger.error(error_message)
+            return error_message
