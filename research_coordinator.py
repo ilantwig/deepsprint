@@ -155,13 +155,13 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     entity1 = entities.get("entity1", "")
     entity2 = entities.get("entity2", "")
     entity3 = entities.get("entity3", "")
-    enhanced_query = f"{query} {entity1} {entity2} {entity3}".strip()
+    enhanced_query = f"{query}".strip()
     logger.debug(f"Enhanced search query: {enhanced_query}")
 
     search = Search()
     
     # Search with automatically determined relevant sites and enhanced query
-    sites = search.search(enhanced_query)
+    sites = search.blended_search(enhanced_query, entities)
     
     # Initialize results string
     all_results = ""
@@ -202,7 +202,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
         topic_summary_prompot=f"""Date: {today}.
 You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
 Topic: {step}
-Key Entities: {entity1}, {entity2}
+Key Entities: {entity1}, {entity2}, {entity3}
 Summary: {all_results}="""
         topic_summary_response=default_model.invoke(topic_summary_prompot)
         topic_summary_response=topic_summary_response.content.strip()
