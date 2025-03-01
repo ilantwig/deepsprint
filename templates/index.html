@@ -90,9 +90,10 @@
         <div id="research-plan-container" class="research-plan">
             <h2>Research Plan</h2>
             {% for step, description in research_plan.items() %}
-                <div class="step">
+                <div class="step" id="plan-step-{{ loop.index }}">
                     <div class="step-number">{{ loop.index }}</div>
                     <p class="research-step">{{ description }}</p>
+                    <div class="step-spinner"></div>
                 </div>
             {% endfor %}
         </div>
@@ -186,9 +187,10 @@
                 let html = '<h2>Research Plan</h2>';
                 Object.entries(data.research_plan).forEach(([step, description], index) => {
                     html += `
-                        <div class="step">
+                        <div class="step" id="plan-step-${index + 1}">
                             <div class="step-number">${index + 1}</div>
                             <p class="research-step">${description}</p>
+                            <div class="step-spinner"></div>
                         </div>
                     `;
                 });
@@ -233,6 +235,11 @@
                 console.error('No research steps found');
                 return;
             }
+
+            // Mark all steps as processing (show spinners)
+            document.querySelectorAll('#research-plan-container .step').forEach((step, index) => {
+                step.classList.add('processing');
+            });
 
             // Create results container if it doesn't exist
             let resultsContainer = document.getElementById('results-container');
@@ -370,6 +377,13 @@
                                 finalTabContent.appendChild(finalReportDiv);
                                 switchTab('final-report');
                             } else {
+                                // Mark the step as completed in the research plan
+                                const planStep = document.getElementById(`plan-step-${result.step}`);
+                                if (planStep) {
+                                    planStep.classList.remove('processing');
+                                    planStep.classList.add('completed');
+                                }
+                                
                                 // Remove the processing indicator for this step
                                 const processingIndicator = document.getElementById(`processing-step-${result.step}`);
                                 if (processingIndicator) {
@@ -429,6 +443,11 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
+                // Mark all steps as error
+                document.querySelectorAll('#research-plan-container .step').forEach(step => {
+                    step.classList.remove('processing');
+                    step.classList.add('error');
+                });
                 resultsContainer.querySelector('#tab-contents').innerHTML = '<p class="error">Error processing research steps</p>';
             }
         }
@@ -684,9 +703,10 @@ If the problem persists, please contact the administrator for assistance.`);
                             if (data.research_plan.length > 0) {
                                 data.research_plan.forEach((description, index) => {
                                     html += `
-                                        <div class="step">
+                                        <div class="step" id="plan-step-${index + 1}">
                                             <div class="step-number">${index + 1}</div>
                                             <p class="research-step">${description}</p>
+                                            <div class="step-spinner"></div>
                                         </div>
                                     `;
                                 });
@@ -696,9 +716,10 @@ If the problem persists, please contact the administrator for assistance.`);
                         } else if (data.research_plan && Object.keys(data.research_plan).length > 0) {
                             Object.entries(data.research_plan).forEach(([step, description], index) => {
                                 html += `
-                                    <div class="step">
+                                    <div class="step" id="plan-step-${index + 1}">
                                         <div class="step-number">${index + 1}</div>
                                         <p class="research-step">${description}</p>
+                                        <div class="step-spinner"></div>
                                     </div>
                                 `;
                             });

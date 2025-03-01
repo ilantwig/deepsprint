@@ -143,6 +143,7 @@ button:hover {
     display: flex;
     align-items: flex-start;
     margin-bottom: 15px;
+    position: relative;
 }
 
 .step-number {
@@ -156,6 +157,33 @@ button:hover {
     justify-content: center;
     margin-right: 15px;
     font-weight: bold;
+}
+
+.step-spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 3px solid #3498db;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    display: none;
+}
+
+.step.processing .step-spinner {
+    display: inline-block;
+}
+
+.step.completed .step-spinner {
+    display: none;
+}
+
+.step.completed .step-number {
+    background-color: #2ecc71;
+}
+
+.step.error .step-number {
+    background-color: #e74c3c;
 }
 
 .research-step {
@@ -697,9 +725,5 @@ html {
 }
 
 .tab-button.final-report-tab.active {
-    background-color: #8e44ad;
-}
-
-.tab-button.final-report-tab.active::after {
     background-color: #8e44ad;
 } 
