@@ -242,7 +242,7 @@ def generate_final_report(all_results: str) -> str:
     """
     today = date.today()
     final_report_prompt=f"""Date: {today}.
-Create a verbose, detailed executive summary report in html from below content.  You must include MOST of the details from the original content. Feel free to restructure it, use tables, lists, etc.  Have a conclusion section with cross data insights.
+Create a verbose, detailed report in html from below content.  Summarize key findings. You must include MOST of the details from the original content. Convert findings into charts, tables or structured bullet points  Have a conclusion section with cross data insights.
 Content: {all_results}="""
 
     final_report_response=default_model.invoke(final_report_prompt)

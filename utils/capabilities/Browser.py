@@ -37,7 +37,7 @@ class Browser:
                 return f"Unable to extract meaningful content from {url}. The page might be protected, require JavaScript, or contain no accessible text content."
                 
             # logger.debug(f"Raw scraping: {text}")
-            summarized_text = TextUtils.perform_task(text, "Create a detailed summary of the provided content. Do not miss out on any fact/detail. Keep links, dates in tact.")
+            summarized_text = TextUtils.perform_task(text, "Create a concise summary of the provided content. Do not miss out on any fact/detail. Keep links, dates in tact.")
             logger.debug(f"Summarized text final length: {len(summarized_text)} characters")
             logger.debug(f"\\nn--------------------------------------------------\nSummary: {summarized_text}\n---------------------------\n\n")
 

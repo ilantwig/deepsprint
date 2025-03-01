@@ -290,4 +290,4 @@ function processStreamingResponse(response) {
         completeFinalReportProcessing();
         // ... existing code to display the final report ...
     }
-} 
+}
