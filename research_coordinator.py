@@ -156,7 +156,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     entity2 = entities.get("entity2", "")
     entity3 = entities.get("entity3", "")
     enhanced_query = f"{query}".strip()
-    logger.debug(f"Enhanced search query: {enhanced_query}")
+    logger.debug(f"Enhanced search query: {enhanced_query} {entity1} {entity2} {entity3}")
 
     search = Search()
     

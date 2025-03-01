@@ -93,6 +93,10 @@ def execute_deep_sprint():
     entities = request.json.get('entities', {})
     search_terms = request.json.get('search_terms', {})  # Get search terms from request
     
+    # Add debug logging
+    logger.debug(f"Search terms received: {search_terms}")
+    logger.debug(f"Research steps: {research_steps}")
+    
     # Convert research_steps to a dictionary if it's a list
     if isinstance(research_steps, list):
         research_steps_dict = {}
@@ -129,9 +133,16 @@ def execute_deep_sprint():
                 }
             else:
                 # Get the search term for this step if available
-                search_term = None
+                search_term_json = None
+                search_term = None  # Initialize search_term with a default value
                 if step_key in search_terms:
-                    search_term = search_terms[step_key]
+                    search_term_json = search_terms[step_key]
+                    # Parse the JSON string into a Python dictionary
+                    try:
+                        search_term = json.loads(search_term_json)
+                    except json.JSONDecodeError:
+                        # Handle the case where the JSON is invalid
+                        search_term = {"search_term": search_term_json}
                 result = deep_sprint_topic(step, step_num, entities, search_term)
             
             result_dict = {
