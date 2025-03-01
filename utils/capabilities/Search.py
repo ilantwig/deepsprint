@@ -102,7 +102,7 @@ Your response must start with {{"""
         logger.debug(f"Starting search for '{_query}' with limit {limit} and time range {time_range}")
 
         query=Search.optimize_query(_query)
-        logger.debug(f"Optimized search query: {query}")
+        logger.debug(f"Optimized search query: {query} -inurl:pdf")
 
         url = "https://google.serper.dev/search"
         payload = json.dumps({
