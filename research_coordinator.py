@@ -27,7 +27,7 @@ def build_research_plan(research_topic: str) -> dict:
     logger.debug(f"Starting research plan build at {start_time}")
 
     # First, identify key entities in the research topic
-    entity_prompt = f"""Given the following research topic: [{research_topic}], identify the 2 most important entities (people, companies, organizations, products, etc.) that are central to this topic.
+    entity_prompt = f"""Given the following research topic: [{research_topic}], identify the 3 most important entities (people, companies, organizations, products, etc.) that are central to this topic.  Entiry can be a single word only!
     Your response must be in JSON format: {{"entity1":"<first key entity>", "entity2":"<second key entity>"}}. Your response must start with {{"""
     
     entity_response = default_model.invoke(entity_prompt)

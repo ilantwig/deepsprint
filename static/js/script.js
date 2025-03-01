@@ -258,4 +258,36 @@ async function executeDeepSprint() {
         console.error('Error:', error);
         resultsContainer.querySelector('#tab-contents').innerHTML = '<p class="error">Error processing research steps</p>';
     }
+}
+
+// When you start processing the final report (right before you request it)
+function startFinalReportProcessing() {
+    const finalReportTab = document.querySelector('.tab-button.final-report-tab');
+    if (finalReportTab) {
+        finalReportTab.classList.add('processing');
+    }
+}
+
+// When the final report is complete
+function completeFinalReportProcessing() {
+    const finalReportTab = document.querySelector('.tab-button.final-report-tab');
+    if (finalReportTab) {
+        finalReportTab.classList.remove('processing');
+    }
+}
+
+// In your function that processes the streaming response, add:
+function processStreamingResponse(response) {
+    // ... existing code ...
+    
+    // When you detect that the final report is starting to be generated
+    startFinalReportProcessing();
+    
+    // ... existing code ...
+    
+    // When you receive the final report
+    if (data.final_report) {
+        completeFinalReportProcessing();
+        // ... existing code to display the final report ...
+    }
 } 
