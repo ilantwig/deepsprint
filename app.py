@@ -74,23 +74,37 @@ def regenerate_plan():
     
     # Extract just the research steps, excluding entities and research_topic
     research_steps = {k: v for k, v in research_plan.items() 
-                     if k.startswith('step') and not k in ['entities', 'research_topic']}
+                     if k.startswith('step') and not k in ['entities', 'research_topic', 'search_terms']}
     
-    # Return only the steps in the response, but keep entities separate
+    # Get the search terms
+    search_terms = research_plan.get('search_terms', {})
+    
+    # Return only the steps in the response, but keep entities and search_terms separate
     return jsonify(research_plan=research_steps, 
                   research_results=None, 
                   test_mode=test_mode,
                   crewid=new_crewid,
-                  entities=research_plan.get('entities', {}))  # Include entities separately
+                  entities=research_plan.get('entities', {}),
+                  search_terms=search_terms)  # Include search_terms
 
 @app.route('/execute_deep_sprint', methods=['POST'])
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
     entities = request.json.get('entities', {})
+    search_terms = request.json.get('search_terms', {})  # Get search terms from request
+    
+    # Convert research_steps to a dictionary if it's a list
+    if isinstance(research_steps, list):
+        research_steps_dict = {}
+        for i, step in enumerate(research_steps):
+            step_key = f"step{i+1}"
+            research_steps_dict[step_key] = step
+        research_steps = research_steps_dict
+    
     result_queue = Queue()
     results_container = {'all_results': ''}
 
-    def process_step(step, step_num):
+    def process_step(step, step_num, step_key):
         try:
             # Use the global test_mode variable instead of hardcoded value
             if test_mode:
@@ -114,7 +128,11 @@ def execute_deep_sprint():
                     'execution_time': '1.2s'
                 }
             else:
-                result = deep_sprint_topic(step, step_num,entities)
+                # Get the search term for this step if available
+                search_term = None
+                if step_key in search_terms:
+                    search_term = search_terms[step_key]
+                result = deep_sprint_topic(step, step_num, entities, search_term)
             
             result_dict = {
                 'step': step_num + 1,
@@ -136,8 +154,8 @@ def execute_deep_sprint():
     def generate():
         # Start all threads
         threads = []
-        for i, step in enumerate(research_steps):
-            thread = Thread(target=process_step, args=(step, i))
+        for i, (step_key, step_value) in enumerate(research_steps.items()):
+            thread = Thread(target=process_step, args=(step_value, i, step_key))
             thread.start()
             threads.append(thread)
 

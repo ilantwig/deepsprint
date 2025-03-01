@@ -77,6 +77,19 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
 
     research_plan_json = json.loads(research_plan_response)
     
+    # Generate search terms for each step
+    search_terms = {}
+    for step_key, step_value in research_plan_json.items():
+        if step_key.startswith("step"):
+            search_term_prompt = f"generate a google search term to address this: {step_value}.  Respond in json format: {{'search_term':'<search term>'}}.  Youre response must start with {{"
+            search_term_response = default_model.invoke(search_term_prompt)
+            search_term = search_term_response.content.strip()
+            search_terms[step_key] = search_term
+            logger.debug(f"Generated search term for {step_key}: {search_term}")
+    
+    # Add search terms to the research plan JSON
+    research_plan_json["search_terms"] = search_terms
+    
     # Add entities and research topic to the research plan JSON
     research_plan_json["entities"] = entities_json
     research_plan_json["research_topic"] = research_topic
@@ -104,7 +117,7 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
     # Return only the plan part, not the entire result object
     return research_plan_json
 
-def deep_sprint_topic(step: str, step_number: int, entities: dict) -> str:
+def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: str = None) -> str:
     """
     Executes a specific research step.
     
@@ -112,6 +125,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict) -> str:
         step (str): The step to execute
         step_number (int): The number of the current step
         entities (dict): Key entities identified for the research topic
+        search_term (str, optional): The search term to use instead of the step description
         
     Returns:
         str: The result of the research step
@@ -122,10 +136,26 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict) -> str:
 
     logger.debug(f"Executing step: {step}")
     
+    # If a search term is provided, use it; otherwise, use the step description
+    if search_term:
+        # Parse the search term from JSON if it's a JSON string
+        try:
+            search_term_json = json.loads(search_term)
+            if isinstance(search_term_json, dict) and 'search_term' in search_term_json:
+                query = search_term_json['search_term']
+            else:
+                query = search_term
+        except (json.JSONDecodeError, TypeError):
+            # If it's not valid JSON or is None, use it as is
+            query = search_term
+    else:
+        query = step
+    
     # Enhance search query with key entities
     entity1 = entities.get("entity1", "")
     entity2 = entities.get("entity2", "")
-    enhanced_query = f"{step} {entity1} {entity2}".strip()
+    entity3 = entities.get("entity3", "")
+    enhanced_query = f"{query} {entity1} {entity2} {entity3}".strip()
     logger.debug(f"Enhanced search query: {enhanced_query}")
 
     search = Search()
