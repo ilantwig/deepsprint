@@ -23,12 +23,12 @@ class File:
     def _ensure_directories(cls, crewid=None) -> None:
         """Ensure input and output directories exist."""
         cls.CREWID_OUTPUT_DIR = Path.joinpath(cls.OUTPUT_DIR, crewid)
-        cls.CREWID_PROMPTS_DIR = Path.joinpath(cls.PROMPTS_DIR, crewid)
+        # cls.CREWID_PROMPTS_DIR = Path.joinpath(cls.PROMPTS_DIR, crewid)
         logger.debug(f"CREWID_DIR: {cls.CREWID_OUTPUT_DIR}")
 
         cls.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         cls.CREWID_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        cls.CREWID_PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
+        # cls.CREWID_PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Ensured directories exist")
 
     # @staticmethod

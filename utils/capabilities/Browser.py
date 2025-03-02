@@ -1,6 +1,9 @@
 from utils.capabilities.Text import TextUtils
 from utils.capabilities.Search import logger
+import logging
 
+# Completely disable all logs from _base_client.py
+logging.getLogger("_base_client").disabled = True
 
 from crewai_tools import ScrapeWebsiteTool
 # from crewai_tools import SeleniumScrapingTool

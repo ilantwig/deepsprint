@@ -10,6 +10,10 @@ import json
 from utils.crewid import CrewID
 from config import test_mode
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+
+# Completely disable all logs from _base_client.py
+logging.getLogger("_base_client").disabled = True
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,15 +81,38 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
 
     research_plan_json = json.loads(research_plan_response)
     
-    # Generate search terms for each step
+    # Generate search terms for each step in a single LLM call
     search_terms = {}
+    steps_for_search = {}
     for step_key, step_value in research_plan_json.items():
         if step_key.startswith("step"):
-            search_term_prompt = f"generate a google search term to address this: {step_value}.  Respond in json format: {{'search_term':'<search term>'}}.  Youre response must start with {{"
-            search_term_response = default_model.invoke(search_term_prompt)
-            search_term = search_term_response.content.strip()
-            search_terms[step_key] = search_term
-            logger.debug(f"Generated search term for {step_key}: {search_term}")
+            steps_for_search[step_key] = step_value
+    
+    if steps_for_search:
+        search_term_prompt = f"""For each of the following research steps, generate an appropriate Google search term.
+        
+        {json.dumps(steps_for_search, indent=2)}
+        
+        Respond in JSON format with the step keys and their corresponding search terms:
+        {{
+            "step1": "example search term for step 1",
+            "step2": "example search term for step 2",
+            ...
+        }}
+        
+        Your response must start with {{"""
+        
+        search_term_response = default_model.invoke(search_term_prompt)
+        search_terms_json = search_term_response.content.strip()
+        search_terms_json = search_terms_json.replace("```json", "").replace("```", "")
+        logger.debug(f"Generated search terms: {search_terms_json}")
+        
+        try:
+            search_terms = json.loads(search_terms_json)
+        except json.JSONDecodeError as e:
+            logger.error(f"Error parsing search terms JSON: {e}")
+            # Fallback to empty dict if parsing fails
+            search_terms = {}
     
     # Add search terms to the research plan JSON
     research_plan_json["search_terms"] = search_terms

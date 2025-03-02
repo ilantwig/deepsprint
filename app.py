@@ -24,12 +24,17 @@ import uuid
 import random
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
+logging.getLogger("_base_client").disabled = True
+
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": ["http://localhost:5000", "http://127.0.0.1:5000"], "supports_credentials": True}})
 
 load_dotenv()
+
+# Add this near the top of your file, with other global variables
+research_plan_cache = {}
 
 # Add these configurations after creating the Flask app but before Session(app)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -91,10 +96,35 @@ def regenerate_plan():
 def execute_deep_sprint():
     research_steps = request.json.get('research_steps', [])
     entities = request.json.get('entities', {})
-    search_terms = request.json.get('search_terms', {})  # Get search terms from request
+    research_id = CrewID.get_crewid()
+    
+    # Try to get search_terms and entities from cache first
+    if research_id in research_plan_cache:
+        search_terms = research_plan_cache[research_id].get('search_terms', {})
+        # If entities were passed empty but we have them in cache, use the cached ones
+        if not entities and 'entities' in research_plan_cache[research_id]:
+            entities = research_plan_cache[research_id].get('entities', {})
+        logger.debug(f"Search terms and entities loaded from cache for research_id: {research_id}")
+    else:
+        # Load from file if not in cache
+        research_plan_path = f"output/{research_id}/_research_plan.json"
+        try:
+            with open(research_plan_path, 'r') as f:
+                research_plan = json.load(f)
+                # Store in cache for future use
+                research_plan_cache[research_id] = research_plan
+                search_terms = research_plan.get('search_terms', {})
+                # If entities were passed empty but exist in the file, use those
+                if not entities and 'entities' in research_plan:
+                    entities = research_plan.get('entities', {})
+                logger.debug(f"Search terms and entities loaded from file and cached for research_id: {research_id}")
+        except Exception as e:
+            logger.error(f"Error loading search terms from research plan: {e}")
+            search_terms = {}
     
     # Add debug logging
-    logger.debug(f"Search terms received: {search_terms}")
+    logger.debug(f"Search terms: {search_terms}")
+    logger.debug(f"Entities: {entities}")
     logger.debug(f"Research steps: {research_steps}")
     
     # Convert research_steps to a dictionary if it's a list
@@ -133,17 +163,16 @@ def execute_deep_sprint():
                 }
             else:
                 # Get the search term for this step if available
-                search_term_json = None
                 search_term = None  # Initialize search_term with a default value
                 if step_key in search_terms:
-                    search_term_json = search_terms[step_key]
-                    # Parse the JSON string into a Python dictionary
-                    try:
-                        search_term = json.loads(search_term_json)
-                    except json.JSONDecodeError:
-                        # Handle the case where the JSON is invalid
-                        search_term = {"search_term": search_term_json}
+                    search_term = search_terms[step_key]
+                    logger.debug(f"Using search term for {step_key}: {search_term}")
+                else:
+                    logger.debug(f"No search term found for {step_key}")
+                
+                logger.debug(f"Executing deep sprint for step {step_num+1} with search term: {search_term}")
                 result = deep_sprint_topic(step, step_num, entities, search_term)
+                logger.debug(f"Completed deep sprint for step {step_num+1}")
             
             result_dict = {
                 'step': step_num + 1,
