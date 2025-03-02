@@ -227,7 +227,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     else:
         today = date.today()
         topic_summary_prompot=f"""Date: {today}.
-You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. Key findings, common points.  Convert findings into tables, charts or structured bullet pointsDO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
+You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. Key findings, common points.  Convert findings into tables, charts or structured bullet pointsDO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed. Have a citation section in the bottom.
 Topic: {step}
 Key Entities: {entity1}, {entity2}, {entity3}
 Summary: {all_results}="""
@@ -268,8 +268,23 @@ def generate_final_report(all_results: str) -> str:
         str: The final report
     """
     today = date.today()
-    final_report_prompt=f"""Date: {today}.
-Create a verbose, detailed executive summary in html from below content.  Summarize key findings. You must include MOST of the details from the original content. Convert findings into charts, tables or structured bullet points  Add insights that can only be derived from looking at all of the content.  Present the information in a way that is easy to understand and use.
+    
+    # Get the research topic from the research plan file
+    crewid = CrewID.get_crewid()
+    research_topic = ""
+    
+    try:
+        from utils.capabilities.File import File
+        research_plan_content = File.read_file(crewid, "", "research_plan.json")
+        if research_plan_content:
+            research_plan = json.loads(research_plan_content)
+            research_topic = research_plan.get("research_topic", "")
+    except Exception as e:
+        logger.error(f"Error retrieving research topic: {e}")
+        research_topic = "Research Topic"  # Fallback if we can't get the actual topic
+    
+    final_report_prompt=f"""Date: {today}. Original topic:"{research_topic}".
+Create a verbose, detailed executive summary in html from below content.  Summarize key findings. You must include MOST of the details from the original content. Convert findings into charts, tables or structured bullet points  Add insights that can only be derived from looking at all of the content.  Present the information in a way that is easy to understand and use. Keep all citations.
 Content: {all_results}="""
 
     final_report_response=default_model.invoke(final_report_prompt)
