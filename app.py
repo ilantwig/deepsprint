@@ -60,8 +60,7 @@ import os  # Add this import for os.environ
 from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
 from utils.crewid import CrewID
-import uuid
-import random
+
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 logging.getLogger("_base_client").disabled = True
@@ -112,8 +111,7 @@ def regenerate_plan():
     research_topic = request.form['research_topic']
     
     # Force regeneration of a new 4-digit crewID
-    new_crewid = str(random.randint(1000, 9999))  # Generate a new 4-digit random ID
-    CrewID.set_crewid(new_crewid)  # Set it as the current crewID
+    CrewID.generate_crewid()
     
     research_plan = build_research_plan(research_topic)
     
@@ -128,7 +126,7 @@ def regenerate_plan():
     return jsonify(research_plan=research_steps, 
                   research_results=None, 
                   test_mode=test_mode,
-                  crewid=new_crewid,
+                  crewid=CrewID.get_crewid(),
                   entities=research_plan.get('entities', {}),
                   search_terms=search_terms)  # Include search_terms
 

@@ -9,8 +9,7 @@
 [![Twitter](https://img.shields.io/twitter/follow/itwig)](https://twitter.com/itwig)
 
 # DeepSprint
-
-DeepSprint supercharges your research with AI, helping you dive deep into any topic in record time. Born from my own need to accelerate research workflows at [Navan](https://www.navan.com), I built this tool to make thorough research accessible to everyone.
+A quick UI-based tool to help you do deep research.  Nothing fancy, just a simple tool to help you do deep research.
 
 # Quick start
 Requires Python>=3.10 and <=3.12!!
@@ -64,7 +63,7 @@ python app.py --test
 
 - Rapid deep research capabilities
 - Support for both OpenAI and local LLM models via LM Studio
-- Flexible API integration with SerperAPI for web searches
+- Browse through the research results as well as past reports in the browser
 - Flask-based server architecture
 
 ## Prerequisites
@@ -86,7 +85,7 @@ python app.py --test
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Do whatever you want with it.
 
 ## License
 
@@ -95,12 +94,8 @@ MIT License
 ## Support
 
 For issues, questions, or suggestions, please [open an issue](https://github.com/ilantwig/deepsprint/issues) on GitHub.
+I am busy, so I may not respond to issues.
 
-## Acknowledgments
-
-- OpenAI for their powerful language models
-- SerperAPI for search capabilities
-- The LM Studio team for local model support
 
 ## Author
 
