@@ -11,8 +11,8 @@ from utils.crewid import CrewID
 from config import test_mode
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 
-# Completely disable all logs from _base_client.py
 logging.getLogger("_base_client").disabled = True
+
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +227,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     else:
         today = date.today()
         topic_summary_prompot=f"""Date: {today}.
-You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
+You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. Key findings, common points.  Convert findings into tables, charts or structured bullet pointsDO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed.
 Topic: {step}
 Key Entities: {entity1}, {entity2}, {entity3}
 Summary: {all_results}="""
@@ -269,7 +269,7 @@ def generate_final_report(all_results: str) -> str:
     """
     today = date.today()
     final_report_prompt=f"""Date: {today}.
-Create a verbose, detailed report in html from below content.  Summarize key findings. You must include MOST of the details from the original content. Convert findings into charts, tables or structured bullet points  Have a conclusion section with cross data insights.
+Create a verbose, detailed executive summary in html from below content.  Summarize key findings. You must include MOST of the details from the original content. Convert findings into charts, tables or structured bullet points  Add insights that can only be derived from looking at all of the content.  Present the information in a way that is easy to understand and use.
 Content: {all_results}="""
 
     final_report_response=default_model.invoke(final_report_prompt)

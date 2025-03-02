@@ -421,7 +421,7 @@ Your response must start with {{"""
         entity1 = entities.get("entity1", "")
         entity2 = entities.get("entity2", "")
         entity3 = entities.get("entity3", "")
-        enhanced_query = f"{query} {entity1} {entity2} {entity3}"
+        enhanced_query = f"{query} {entity1} {entity2}"
 
         # Step 1: Analyze query to determine optimal blend ratio if not provided or invalid
         required_keys = {'web', 'news', 'twitter'}
