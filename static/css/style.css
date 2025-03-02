@@ -413,17 +413,41 @@ button:hover {
     opacity: 0.8;
 }
 
-.settings-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
+.settings-button, .history-dropdown-btn {
     background-color: #34495e;
     color: white;
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.3s;
+}
+
+.settings-button:hover, .history-dropdown-btn:hover {
+    background-color: #2c3e50;
+}
+
+.settings-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
     z-index: 1000;
+}
+
+.history-dropdown {
+    position: absolute;
+    top: 20px;
+    right: 150px;
+    z-index: 1000;
+}
+
+.settings-button svg, .history-dropdown-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 .settings-modal {
@@ -501,35 +525,6 @@ button:hover {
 }
 
 /* History Dropdown */
-.history-dropdown {
-    position: absolute;
-    top: 20px;
-    right: 150px;
-    display: inline-block;
-    z-index: 1000;
-}
-
-.history-dropdown-btn {
-    background-color: #9b59b6;
-    color: white;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 16px;
-}
-
-.history-dropdown-btn svg {
-    margin-right: 5px;
-}
-
-.history-dropdown-btn:hover {
-    background-color: #8e44ad;
-}
-
 .history-dropdown-content {
     display: none;
     position: absolute;

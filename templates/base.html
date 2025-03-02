@@ -9,9 +9,10 @@
 <body>
     <header>
         <h1>DeepSprint</h1>
-        
+    </header>
 
-
+    <main>
+        {% block content %}{% endblock %}
         <div class="social-buttons">
             <!-- GitHub Star Button -->
             <a class="github-button" 
@@ -32,10 +33,6 @@
                <span class="model-badge">{{ model_status }}</span>
                {% endif %}          <span class="crew-id-badge">Crew {{ crewid }}</span>
         </div>
-    </header>
-
-    <main>
-        {% block content %}{% endblock %}
     </main>
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
