@@ -1,10 +1,50 @@
 import warnings
 import logging
+import sys
 # Filter out Pydantic's deprecation warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic")
 warnings.filterwarnings("ignore", ".*Pydantic V1.*")
 warnings.filterwarnings("ignore", ".*PydanticDeprecatedSince20.*")
+warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="flask_session")
 
+# Suppress Flask's internal logging
+logging.getLogger("werkzeug").disabled = True
+# Suppress _internal.py logging
+logging.getLogger("werkzeug._internal").disabled = True
+# Suppress _config.py and _trace.py logging
+logging.getLogger("_config").disabled = True
+logging.getLogger("_trace").disabled = True
+
+# More aggressive approach to suppress specific modules
+for logger_name in ["werkzeug", "_internal", "_config", "_trace", "httpx", "httpcore", "urllib3", "LiteLLM"]:
+    logger = logging.getLogger(logger_name)
+    logger.disabled = True
+    logger.setLevel(logging.ERROR)  # Set to ERROR level as fallback if disabling doesn't work
+
+# Add a filter to the root logger to block specific module logs
+class ModuleFilter(logging.Filter):
+    def __init__(self, blocked_modules):
+        super().__init__()
+        self.blocked_modules = blocked_modules
+        
+    def filter(self, record):
+        # Return False to block the log message
+        return not any(module in record.pathname for module in self.blocked_modules)
+
+# Apply the filter to the root logger
+root_logger = logging.getLogger()
+root_logger.addFilter(ModuleFilter(['_internal.py', '_config.py', '_trace.py']))
+
+# Configure logging only once
+if not getattr(sys, 'logging_configured', False):
+    # Set the logging level for all loggers to ERROR
+    logging.basicConfig(level=logging.ERROR)
+    
+    # Mark logging as configured
+    sys.logging_configured = True
+
+# Now import the rest of the modules
 from flask import Flask, render_template, request, jsonify, Response, stream_with_context
 from flask_cors import CORS
 from pathlib import Path

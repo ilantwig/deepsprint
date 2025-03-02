@@ -72,6 +72,15 @@ Create a detailed profile on Ilan Twig by:
 (5) Find information on Ilan Twig's philanthropic activities or involvement in any non-profit organizations.
 (6) Find information on Ilan Twig's social media presence and any insights it provides.
 
+Example of a topic and a suggested research plan:
+Which animals are better dolphins or sharks?
+(1) Find articles and studies comparing dolphins and sharks as pets.
+(2) Find information about the different breeds of dolphins and sharks.
+(3) Find information about the different personalities of dolphins and sharks.
+(4) Find information about the different health needs of dolphins and sharks.
+(5) Find information about the different training needs of dolphins and sharks.
+(6) Find information about the different costs of owning a dog or cat.
+
 Based on that, create a research plan for: {research_topic}.  All steps are single line. All steps must include the context to the main research topic. Your response must be in JSON format. {{'step1':'<step description>'}}. Your response must start with {{"""
     logger.debug(f"Prompt: {research_plan_prompt}")
     research_plan_response=default_model.invoke(research_plan_prompt)
