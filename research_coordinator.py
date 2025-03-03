@@ -297,9 +297,20 @@ def generate_final_report(all_results: str) -> str:
 # Content: {all_results}="""
     
     final_report_prompt=f"""Date: {today}.
-Given the data below, generate an html report that directly addresses this topic:
-{research_topic}.  If it is a question then answer it explicitly even if there is not a definite answer.  ALWAYS DO YOUR BEST TO ANSWER THE QUESTION if exists.
-Feel free to restructure the data inot tables, bullet points or whatever you see fit.
+Generate a comprehensive executive summary addressing: "{research_topic}"
+
+Using the provided sub-topic reports, create a clear and organized HTML report that:
+1. Directly answers the main question/addresses the topic
+2. Synthesizes key findings from all sub-topic reports
+3. Highlights important patterns and connections
+4. Presents conclusions and implications
+
+Format the report with:
+- An executive summary (2-3 paragraphs)
+- Key findings in bullet points
+- Supporting data in tables where relevant
+- Clear section headings
+- Final conclusion that explicitly addresses the original query
 
 Data
 {all_results}"""
