@@ -784,3 +784,18 @@ html {
     border-radius: 10px;
     margin-left: 8px;
 }
+
+/* Add these new styles */
+.button-container button:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+.new-report-button {
+    background-color: #27ae60;
+    display: none;  /* Hidden by default */
+}
+
+.new-report-button:hover {
+    background-color: #219a52;
+}

@@ -79,7 +79,7 @@
                 <label for="research_topic">Research Topic:</label>
                 <div class="research-topic-container">
                     <textarea id="research_topic" name="research_topic" rows="4" required>{{ research_topic if research_topic else '' }}</textarea>
-                    <button type="button" onclick="submitForm()">Generate Plan</button>
+                    <button type="button" onclick="submitForm()">Generate Research Plan</button>
                 </div>
             </div>
         </form>
@@ -99,8 +99,8 @@
         </div>
 
         <div class="button-container">
-            <button onclick="regeneratePlan('{{ research_topic }}')">Regenerate Plan</button>
-            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+            <button id="deepSprintButton" class="deep-sprint-button">Execute Deep Sprint</button>
+            <button id="newReportButton" class="new-report-button" style="display: none;">Start New Report</button>
         </div>
 
         <div id="results-container">
@@ -210,10 +210,13 @@
                     const buttonContainer = document.createElement('div');
                     buttonContainer.className = 'button-container';
                     buttonContainer.innerHTML = `
-                        <button onclick="regeneratePlan('${encodeURIComponent(topic)}')">Regenerate Plan</button>
-                        <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+                        <button id="deepSprintButton" class="deep-sprint-button">Execute Deep Sprint</button>
+                        <button id="newReportButton" class="new-report-button" style="display: none;">Start New Report</button>
                     `;
                     document.querySelector('.container').appendChild(buttonContainer);
+                    
+                    // Add event listener for deepSprintButton only
+                    document.getElementById('deepSprintButton').addEventListener('click', executeDeepSprint);
                 }
             })
             .catch(error => {
@@ -223,6 +226,26 @@
         }
 
         async function executeDeepSprint() {
+            // Find the buttons
+            const deepSprintButton = document.getElementById('deepSprintButton');
+            const newReportButton = document.getElementById('newReportButton');
+            const generateButton = document.querySelector('.research-topic-container button');
+            
+            // Disable the action buttons
+            if (deepSprintButton) deepSprintButton.disabled = true;
+            if (generateButton) generateButton.disabled = true;
+            
+            // Show the new report button
+            if (newReportButton) {
+                newReportButton.style.display = 'block';
+                newReportButton.disabled = false;  // Make sure it's enabled
+                
+                // Add click handler for the new report button
+                newReportButton.addEventListener('click', function() {
+                    location.reload();
+                });
+            }
+            
             // Hide the main spinner
             document.getElementById('loading-spinner').style.display = 'none';
             
@@ -746,9 +769,12 @@ If the problem persists, please contact the administrator for assistance.`);
                         }
                         
                         buttonContainer.innerHTML = `
-                            <button onclick="regeneratePlan('${encodeURIComponent(topic)}')">Regenerate Plan</button>
-                            <button onclick="executeDeepSprint()" class="deep-sprint-button">Run DeepSprint</button>
+                            <button id="deepSprintButton" class="deep-sprint-button">Execute Deep Sprint</button>
+                            <button id="newReportButton" class="new-report-button" style="display: none;">Start New Report</button>
                         `;
+                        
+                        // Add event listeners after updating the buttons
+                        document.getElementById('deepSprintButton').addEventListener('click', executeDeepSprint);
                         
                         // If we have research results, display them
                         console.log("Research results:", data.research_results);
@@ -1050,17 +1076,6 @@ If the problem persists, please contact the administrator for assistance.`);
                 }
             });
         }
-
-        function regeneratePlan(topic) {
-            console.log("Regenerating plan for topic:", topic);
-            document.getElementById('research_topic').value = decodeURIComponent(topic);
-            submitForm();
-        }
-
-        // Call this when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            checkRequiredSettings();
-        });
 
         function downloadPDF(stepNumber) {
             // Get the content
