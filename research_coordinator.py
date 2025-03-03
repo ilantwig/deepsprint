@@ -298,7 +298,7 @@ def generate_final_report(all_results: str) -> str:
     
     final_report_prompt=f"""Date: {today}.
 Given the data below, generate an html report that directly addresses this topic:
-{research_topic}
+{research_topic}.  If it is a question then answer it explicitly even if there is not a definite answer.  ALWAYS DO YOUR BEST TO ANSWER THE QUESTION if exists.
 Feel free to restructure the data inot tables, bullet points or whatever you see fit.
 
 Data
