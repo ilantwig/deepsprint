@@ -180,15 +180,15 @@ Your response must start with {{"""
         }
         
         response = requests.post(url, headers=headers, data=payload)
-        logger.debug(f"Search API call Response: {response.text}")
+        # logger.debug(f"Search API call Response: {response.text}")
         results = response.json().get('organic', [])
-        logger.debug(f"Results: {results}")
-        
+        # logger.debug(f"Results: {results}")
         formatted_results = []
         for result in results:
             # Only add the link if it exists and is not empty
             if 'link' in result and result['link']:
                 formatted_results.append(result["link"])
+                logger.debug(f"Link result: {result['link']}")
         
         # Check if we have any valid results
         if not formatted_results and 'organic' in response.json():
@@ -197,7 +197,7 @@ Your response must start with {{"""
         # Log search results to file
         Search._save_search_log(_query, query, results=formatted_results, search_type="standard")
         
-        logger.debug(f"Formatted results: {formatted_results}")
+        # logger.debug(f"Formatted results: {formatted_results}")
         logger.debug("Search is done")
         return formatted_results
 
@@ -407,7 +407,7 @@ Your response must start with {{"""
             return default_ratio
 
     @staticmethod
-    def blended_search(query: str, entities: dict, limit: int = 10, time_range: str = "24h", blend_ratio: dict = None) -> list:
+    def blended_search(query: str, entities: dict, limit: int = 30, time_range: str = "24h", blend_ratio: dict = None) -> list:
         """
         Performs a blended search across multiple search types for more comprehensive results.
         

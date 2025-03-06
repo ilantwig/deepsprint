@@ -300,7 +300,7 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     logger.debug(f"Optimized query: {optimized_query}")
     
     # Perform the search
-    search_results = Search.search(optimized_query)
+    search_results = Search.search(optimized_query, 40)
     
     # Extract URLs from search results
     urls = []
@@ -314,12 +314,15 @@ def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: 
     
     # Browse the URLs and extract content
     all_results = ""
-    for i, url in enumerate(urls[:3]):  # Limit to first 3 URLs for now
+    results_limit = 10
+    for i, url in enumerate(urls[:results_limit]):  # Limit to first 3 URLs for now
         try:
-            logger.debug(f"Browsing URL {i+1}/{len(urls[:3])}: {url}")
+            logger.debug(f"Browsing URL {i+1}/{len(urls[:results_limit])}: {url}")
             content = Browser.scrape_and_summarize_web_page(url)
-            if content:
-                all_results += f"\n\nUpdating allresults with: Source {i+1} ({url}):\n{content}\n"
+            if content and not ("Error scraping" in content):
+                all_results += f"\n\nSource {i+1} ({url}):\n{content}\n"
+            else:
+                logger.error(f"Error scraping URL {url}: {content}")
         except Exception as e:
             logger.error(f"Error browsing URL {url}: {e}")
     
