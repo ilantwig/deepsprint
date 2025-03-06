@@ -45,7 +45,7 @@ if not getattr(sys, 'logging_configured', False):
     sys.logging_configured = True
 
 # Now import the rest of the modules
-from flask import Flask, render_template, request, jsonify, Response, stream_with_context
+from flask import Flask, render_template, request, jsonify, Response, stream_with_context, make_response
 from flask_cors import CORS
 from pathlib import Path
 from research_coordinator import build_research_plan, deep_sprint_topic, generate_final_report
@@ -60,6 +60,10 @@ import os  # Add this import for os.environ
 from flask_wtf.csrf import CSRFProtect
 from flask_session import Session
 from utils.crewid import CrewID
+from xhtml2pdf import pisa
+from io import BytesIO
+import tempfile
+from datetime import datetime
 
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
@@ -169,10 +173,11 @@ def execute_deep_sprint():
     if isinstance(research_steps, list):
         research_steps_dict = {}
         for i, step in enumerate(research_steps):
+            logger.debug(f"Step {i+1}: {step}")
             step_key = f"step{i+1}"
             research_steps_dict[step_key] = step
         research_steps = research_steps_dict
-    
+
     result_queue = Queue()
     results_container = {'all_results': ''}
 
@@ -214,6 +219,7 @@ def execute_deep_sprint():
             
             result_dict = {
                 'step': step_num + 1,
+                'step_value': step,
                 'result': result['summary'],
                 'execution_time': result['execution_time']
             }
@@ -498,6 +504,152 @@ def set_crewid(crewid):
     try:
         CrewID.set_crewid(crewid)
         return jsonify({"status": "success", "crewid": crewid})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route('/generate_pdf', methods=['POST'])
+def generate_pdf():
+    """Generate a PDF using xhtml2pdf based on the content provided."""
+    try:
+        data = request.json
+        title = data.get('title', 'Research Step')
+        content = data.get('content', '')
+        step_number = data.get('step_number', 1)
+        
+        # Determine if this is a complete report
+        is_complete_report = step_number == 'complete'
+        
+        # Create HTML content with appropriate styling
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{title}</title>
+            <meta charset="UTF-8">
+            <style>
+                @page {{
+                    size: a4;
+                    margin: 1cm;
+                }}
+                body {{ 
+                    font-family: Arial, sans-serif; 
+                    margin: 40px; 
+                    line-height: 1.6; 
+                    color: #333;
+                }}
+                h1 {{ 
+                    color: #2c3e50; 
+                    border-bottom: 1px solid #eee; 
+                    padding-bottom: 10px;
+                    font-size: 24px;
+                }}
+                h2 {{ 
+                    color: #3498db; 
+                    margin-top: 20px;
+                    font-size: 20px;
+                }}
+                h3 {{ 
+                    color: #2980b9;
+                    font-size: 18px;
+                }}
+                table {{
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 20px 0;
+                }}
+                th, td {{
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }}
+                th {{
+                    background-color: #f2f2f2;
+                }}
+                .citation {{
+                    font-size: 12px;
+                    color: #7f8c8d;
+                    margin-top: 5px;
+                }}
+                .footer {{
+                    text-align: center;
+                    font-size: 12px;
+                    margin-top: 30px;
+                    color: #7f8c8d;
+                }}
+                ul, ol {{
+                    margin-left: 20px;
+                }}
+                img {{
+                    max-width: 100%;
+                    height: auto;
+                }}
+            </style>
+        </head>
+        <body>
+            {content}
+            <div class="footer">
+                Generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            </div>
+        </body>
+        </html>
+        """
+        
+        # Save the PDF generation prompt
+        from utils.capabilities.File import File
+        from utils.crewid import CrewID
+        crewid = CrewID.get_crewid()
+        
+        pdf_prompt = f"""
+        PDF Generation for: {title}
+        Step Number: {step_number}
+        Is Complete Report: {is_complete_report}
+        
+        HTML Content Template:
+        {html_content}
+        """
+        
+        File.save_prompt(crewid, f"pdf_generation_{step_number}", pdf_prompt)
+        
+        # Create a temporary file to store the HTML
+        with tempfile.NamedTemporaryFile(suffix='.html', delete=False) as html_file:
+            html_file.write(html_content.encode('utf-8'))
+            html_file_path = html_file.name
+        
+        # Create a temporary file for the PDF
+        with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as pdf_file:
+            pdf_file_path = pdf_file.name
+        
+        # Convert HTML to PDF
+        pisa_status = pisa.CreatePDF(
+            html_content,
+            dest=open(pdf_file_path, "wb")
+        )
+        
+        if pisa_status.err:
+            os.unlink(html_file_path)
+            os.unlink(pdf_file_path)
+            return jsonify({"status": "error", "message": "PDF generation failed"}), 500
+        
+        # Read the PDF file
+        with open(pdf_file_path, 'rb') as pdf:
+            pdf_data = pdf.read()
+        
+        # Clean up temporary files
+        os.unlink(html_file_path)
+        os.unlink(pdf_file_path)
+        
+        # Determine filename based on whether it's a complete report
+        if is_complete_report:
+            filename = "complete_research_report.pdf"
+        else:
+            filename = f"research_step_{step_number}.pdf"
+        
+        # Create response with PDF data
+        response = make_response(pdf_data)
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+        
+        return response
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

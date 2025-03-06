@@ -8,7 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Plan Generator</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <button onclick="openSettings()" class="settings-button">
@@ -1089,32 +1088,44 @@ If the problem persists, please contact the administrator for assistance.`);
             const title = stepContent.querySelector('h3')?.textContent || `Step ${stepNumber}`;
             const content = stepContent.querySelector('.result-content')?.innerHTML || '';
             
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Research Step ${stepNumber}</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                        h1 { color: #2c3e50; margin-bottom: 20px; }
-                        .content { margin-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${title}</h1>
-                    <div class="content">${content}</div>
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            // Let the user manually print
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-            }, 300);
+            // Use the backend route for PDF generation with xhtml2pdf
+            fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({
+                    title: title,
+                    content: content,
+                    step_number: stepNumber
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create a URL for the blob
+                const url = window.URL.createObjectURL(blob);
+                
+                // Create a link element and trigger download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `research_step_${stepNumber}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Error downloading PDF:', error);
+                alert('Failed to generate PDF. Please try again.');
+            });
         }
 
         function downloadAllPDF() {
@@ -1150,36 +1161,46 @@ If the problem persists, please contact the administrator for assistance.`);
                 `;
             }
             
-            // Create a new window for printing
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Complete Research Report</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                        h1 { color: #2c3e50; margin-bottom: 30px; }
-                        h2 { color: #2c3e50; margin-top: 40px; margin-bottom: 20px; }
-                        .step-section { margin-bottom: 30px; }
-                        .final-section { margin-top: 50px; border-top: 2px solid #eee; padding-top: 30px; }
-                    </style>
-                </head>
-                <body>
-                    <h1>Research Topic: ${topic}</h1>
-                    ${allContent}
-                </body>
-                </html>
-            `);
-            printWindow.document.close();
-            
-            // Let the user manually print
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-            }, 300);
+            // Use the backend route for PDF generation with xhtml2pdf
+            fetch('/generate_pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('input[name="csrf_token"]').value
+                },
+                body: JSON.stringify({
+                    title: `Research Topic: ${topic}`,
+                    content: allContent,
+                    step_number: 'complete'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create a URL for the blob
+                const url = window.URL.createObjectURL(blob);
+                
+                // Create a link element and trigger download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'complete_research_report.pdf';
+                document.body.appendChild(a);
+                a.click();
+                
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                console.error('Error downloading PDF:', error);
+                alert('Failed to generate PDF. Please try again.');
+            });
         }
     </script>
 </body>
 </html>
-{% endblock %} 
+{% endblock %}

@@ -17,6 +17,7 @@ import requests
 from dotenv import load_dotenv
 import logging
 from utils.crewid import CrewID
+from utils.capabilities.File import File
 
 
 # Get the logger 
@@ -104,6 +105,11 @@ Your response must be is json:
 {{"query":"<your proposed query>"}}
 
 Your response must start with {{"""
+
+        # Save the search optimization prompt
+        crewid = CrewID.get_crewid()
+        File.save_prompt(crewid, "search_optimization", prompt)
+        
         response = default_model.invoke(prompt)
         query_json=response.content.strip()
 

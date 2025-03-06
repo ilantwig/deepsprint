@@ -9,6 +9,7 @@ import logging
 import json
 from utils.crewid import CrewID
 from config import test_mode
+from utils.capabilities.File import File
 logging.basicConfig(level=logging.DEBUG, format='%(name)s - %(levelname)s - %(message)s')
 
 logging.getLogger("_base_client").disabled = True
@@ -31,16 +32,60 @@ def build_research_plan(research_topic: str) -> dict:
     logger.debug(f"Starting research plan build at {start_time}")
 
     # First, identify key entities in the research topic
-    entity_prompt = f"""Given the following research topic: [{research_topic}], identify the 3 most important entities (people, companies, organizations, products, etc.) that are central to this topic.  Entiry can be a single word only!
-    Your response must be in JSON format: {{"entity1":"<first key entity>", "entity2":"<second key entity>"}}. Your response must start with {{"""
+    entity_prompt = f"""Given the following research topic: [{research_topic}], identify the 3 most important entities (people, companies, organizations, products, etc.) that are central to this topic.  Entity can be a single word only!
+    
+Your response must be in JSON format with exactly three entities:
+{{
+    "entity1": "<first key entity>",
+    "entity2": "<second key entity>",
+    "entity3": "<third key entity>"
+}}
+
+Your response must start with {{ and must be valid JSON. Do not include any explanatory text outside the JSON structure."""
+    
+    # Save the entity prompt
+    crewid = CrewID.get_crewid()
+    File.save_prompt(crewid, "entity_identification", entity_prompt)
     
     entity_response = default_model.invoke(entity_prompt)
     entity_response = entity_response.content.strip()
     entity_response = entity_response.replace("```json", "").replace("```", "")
     logger.debug(f"Entity Response: {entity_response}")
     
-    entities_json = json.loads(entity_response)
-    logger.debug(f"Entities json: {entities_json}")
+    try:
+        entities_json = json.loads(entity_response)
+        logger.debug(f"Entities json: {entities_json}")
+    except json.JSONDecodeError as e:
+        logger.error(f"Error parsing entities JSON: {e}")
+        logger.error(f"Raw response: {entity_response}")
+        
+        # Attempt to extract JSON from the response if it contains JSON-like content
+        import re
+        json_pattern = r'({.*})'
+        match = re.search(json_pattern, entity_response, re.DOTALL)
+        
+        if match:
+            try:
+                potential_json = match.group(1)
+                logger.debug(f"Attempting to parse extracted JSON: {potential_json}")
+                entities_json = json.loads(potential_json)
+                logger.debug(f"Successfully extracted and parsed JSON from response: {entities_json}")
+            except json.JSONDecodeError:
+                # If extraction fails, create a basic fallback entities
+                logger.error("Failed to extract valid JSON, using fallback entities")
+                entities_json = {
+                    "entity1": research_topic.split()[0] if research_topic.split() else "Topic",
+                    "entity2": research_topic.split()[1] if len(research_topic.split()) > 1 else "Research",
+                    "entity3": research_topic.split()[2] if len(research_topic.split()) > 2 else "Information"
+                }
+        else:
+            # If no JSON-like content is found, use the fallback entities
+            logger.error("No JSON-like content found in response, using fallback entities")
+            entities_json = {
+                "entity1": research_topic.split()[0] if research_topic.split() else "Topic",
+                "entity2": research_topic.split()[1] if len(research_topic.split()) > 1 else "Research",
+                "entity3": research_topic.split()[2] if len(research_topic.split()) > 2 else "Information"
+            }
 
     research_plan_prompt=f"""Example of a topic and the suggested research plan:
 I want a detailed report on all Israeli hostages held by Hamas in Gaza:
@@ -81,14 +126,63 @@ Which animals are better dolphins or sharks?
 (5) Find information about the different training needs of dolphins and sharks.
 (6) Find information about the different costs of owning a dog or cat.
 
-Based on that, create a research plan for: {research_topic}.  All steps are single line. All steps must include the context to the main research topic. Your response must be in JSON format. {{'step1':'<step description>'}}. Your response must start with {{"""
+Based on that, create a research plan for: {research_topic}
+
+Your response must be in JSON format with step keys and descriptions:
+{{
+    "step1": "First step description",
+    "step2": "Second step description",
+    ...
+}}
+
+Your response must start with {{ and must be valid JSON. Do not include any explanatory text outside the JSON structure."""
+
+    # Save the research plan prompt
+    File.save_prompt(crewid, "research_plan_generation", research_plan_prompt)
+    
     logger.debug(f"Prompt: {research_plan_prompt}")
     research_plan_response=default_model.invoke(research_plan_prompt)
     research_plan_response=research_plan_response.content.strip()
     research_plan_response=research_plan_response.replace("```json","").replace("```","")
     logger.debug(f"Response: {research_plan_response}")
 
-    research_plan_json = json.loads(research_plan_response)
+    try:
+        research_plan_json = json.loads(research_plan_response)
+    except json.JSONDecodeError as e:
+        logger.error(f"Error parsing research plan JSON: {e}")
+        logger.error(f"Raw response: {research_plan_response}")
+        
+        # Attempt to extract JSON from the response if it contains JSON-like content
+        import re
+        json_pattern = r'({.*})'
+        match = re.search(json_pattern, research_plan_response, re.DOTALL)
+        
+        if match:
+            try:
+                potential_json = match.group(1)
+                logger.debug(f"Attempting to parse extracted JSON: {potential_json}")
+                research_plan_json = json.loads(potential_json)
+                logger.debug("Successfully extracted and parsed JSON from response")
+            except json.JSONDecodeError:
+                # If extraction fails, create a basic fallback plan
+                logger.error("Failed to extract valid JSON, using fallback plan")
+                research_plan_json = {
+                    "step1": "Research general information about the topic",
+                    "step2": "Find specific details related to the main aspects",
+                    "step3": "Explore practical applications or implications",
+                    "step4": "Analyze different perspectives or approaches",
+                    "step5": "Compile recommendations or conclusions"
+                }
+        else:
+            # If no JSON-like content is found, use the fallback plan
+            logger.error("No JSON-like content found in response, using fallback plan")
+            research_plan_json = {
+                "step1": "Research general information about the topic",
+                "step2": "Find specific details related to the main aspects",
+                "step3": "Explore practical applications or implications",
+                "step4": "Analyze different perspectives or approaches",
+                "step5": "Compile recommendations or conclusions"
+            }
     
     # Generate search terms for each step in a single LLM call
     search_terms = {}
@@ -100,16 +194,19 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
     if steps_for_search:
         search_term_prompt = f"""For each of the following research steps, generate an appropriate Google search term.
         
-        {json.dumps(steps_for_search, indent=2)}
+{json.dumps(steps_for_search, indent=2)}
         
-        Respond in JSON format with the step keys and their corresponding search terms:
-        {{
-            "step1": "example search term for step 1",
-            "step2": "example search term for step 2",
-            ...
-        }}
+Respond in JSON format with the step keys and their corresponding search terms:
+{{
+    "step1": "example search term for step 1",
+    "step2": "example search term for step 2",
+    ...
+}}
+
+Your response must start with {{ and must be valid JSON. Do not include any explanatory text outside the JSON structure."""
         
-        Your response must start with {{"""
+        # Save the search term prompt
+        File.save_prompt(crewid, "search_term_generation", search_term_prompt)
         
         search_term_response = default_model.invoke(search_term_prompt)
         search_terms_json = search_term_response.content.strip()
@@ -120,8 +217,27 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
             search_terms = json.loads(search_terms_json)
         except json.JSONDecodeError as e:
             logger.error(f"Error parsing search terms JSON: {e}")
-            # Fallback to empty dict if parsing fails
-            search_terms = {}
+            logger.error(f"Raw response: {search_terms_json}")
+            
+            # Attempt to extract JSON from the response if it contains JSON-like content
+            import re
+            json_pattern = r'({.*})'
+            match = re.search(json_pattern, search_terms_json, re.DOTALL)
+            
+            if match:
+                try:
+                    potential_json = match.group(1)
+                    logger.debug(f"Attempting to parse extracted JSON: {potential_json}")
+                    search_terms = json.loads(potential_json)
+                    logger.debug("Successfully extracted and parsed JSON from response")
+                except json.JSONDecodeError:
+                    # If extraction fails, create empty dict
+                    logger.error("Failed to extract valid JSON, using empty dict")
+                    search_terms = {}
+            else:
+                # If no JSON-like content is found, use empty dict
+                logger.error("No JSON-like content found in response, using empty dict")
+                search_terms = {}
     
     # Add search terms to the research plan JSON
     research_plan_json["search_terms"] = search_terms
@@ -131,7 +247,6 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
     research_plan_json["research_topic"] = research_topic
     
     # Save the research plan to a file
-    from utils.capabilities.File import File
     crewid = CrewID.get_crewid()
     
     # # Save the research topic
@@ -155,92 +270,84 @@ Based on that, create a research plan for: {research_topic}.  All steps are sing
 
 def deep_sprint_topic(step: str, step_number: int, entities: dict, search_term: str = None) -> str:
     """
-    Executes a specific research step.
+    Executes a deep sprint on a specific topic.
     
     Args:
-        step (str): The step to execute
-        step_number (int): The number of the current step
-        entities (dict): Key entities identified for the research topic
-        search_term (str, optional): The search term to use instead of the step description
+        step (str): The research step to execute
+        step_number (int): The step number
+        entities (dict): The entities to use for the search
+        search_term (str, optional): The search term to use. Defaults to None.
         
     Returns:
-        str: The result of the research step
+        str: The result of the deep sprint
     """
-
     start_time = datetime.now()
-    logger.debug(f"Starting step execution at {start_time}")
-
-    logger.debug(f"Executing step: {step}")
+    logger.debug(f"Starting deep sprint for step {step_number} at {start_time}")
     
-    # If a search term is provided, use it; otherwise, use the step description
-    if search_term:
-        # Parse the search term from JSON if it's a JSON string
-        try:
-            search_term_json = json.loads(search_term)
-            if isinstance(search_term_json, dict) and 'search_term' in search_term_json:
-                query = search_term_json['search_term']
-            else:
-                query = search_term
-        except (json.JSONDecodeError, TypeError):
-            # If it's not valid JSON or is None, use it as is
-            query = search_term
-    else:
-        query = step
-    
-    # Enhance search query with key entities
+    # Extract entities
     entity1 = entities.get("entity1", "")
     entity2 = entities.get("entity2", "")
     entity3 = entities.get("entity3", "")
-    enhanced_query = f"{query}".strip()
-    logger.debug(f"Enhanced search query: {enhanced_query} {entity1} {entity2} {entity3}")
-
-    search = Search()
     
-    # Search with automatically determined relevant sites and enhanced query
-    sites = search.blended_search(enhanced_query, entities)
+    # Use the provided search term if available, otherwise use the step as the search term
+    if not search_term:
+        search_term = step
     
-    # Initialize results string
+    logger.debug(f"Using search term: {search_term}")
+    
+    # Optimize the search query
+    optimized_query = Search.optimize_query(search_term)
+    logger.debug(f"Optimized query: {optimized_query}")
+    
+    # Perform the search
+    search_results = Search.search(optimized_query)
+    
+    # Extract URLs from search results
+    urls = []
+    for result in search_results:
+        if isinstance(result, dict) and 'link' in result:
+            urls.append(result['link'])
+        elif isinstance(result, str):
+            urls.append(result)
+    
+    logger.debug(f"Found {len(urls)} URLs")
+    
+    # Browse the URLs and extract content
     all_results = ""
-    final_results = ""
-    # Process each site
-    for site in sites:
+    for i, url in enumerate(urls[:3]):  # Limit to first 3 URLs for now
         try:
-            # Use Browser's static method to scrape and summarize
-            summary = Browser.scrape_and_summarize_web_page(site)
-            
-            # Add to results with source attribution
-            all_results += f"\nSource: {site}\n{summary}\n"
-
+            logger.debug(f"Browsing URL {i+1}/{len(urls[:3])}: {url}")
+            content = Browser.scrape_and_summarize_web_page(url)
+            if content:
+                all_results += f"\n\nUpdating allresults with: Source {i+1} ({url}):\n{content}\n"
         except Exception as e:
-            logger.error(f"Error processing {site}: {str(e)}")
-            continue
-    # For testing, you can set this environment variable to use mock data
+            logger.error(f"Error browsing URL {url}: {e}")
+    
     if test_mode:
-        topic_summary_response = """<style>
-        body {
-            font-family: Arial;
-        }
-        </style>
-        <h1>Mock Research Report</h1>
-        <p>This is a mock research report for step: {step}</p>
-        <h2>Key Findings</h2>
+        topic_summary_response = f"""
+        <h1>Research Findings for Step {step_number + 1}</h1>
+        <p>This is a mock response for testing purposes.</p>
+        <h2>Key Insights</h2>
         <ul>
             <li>Finding 1: Lorem ipsum dolor sit amet</li>
             <li>Finding 2: Consectetur adipiscing elit</li>
-            <li>Finding 3: Sed do eiusmod tempor</li>
+            <li>Finding 3: Sed do eiusmod tempor incididunt</li>
         </ul>
-        <h2>Detailed Analysis</h2>
-        <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-        <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-        """.format(step=step)
+        <p>Source: <a href="https://example.com">Example.com</a></p>
+        """
     else:
         today = date.today()
-        topic_summary_prompot=f"""Date: {today}.
+        topic_summary_prompt=f"""Date: {today}.
 You are a research assistant. You are given a topic and content from multiple websites. Your goal is to sythesize the information into a comprehensive html report on the topic. Key findings, common points.  Convert findings into tables, charts or structured bullet points. DO NOT HAVE A CONCLUSION section. Your response must be verbose and detailed. Have a citation section in the bottom.
 Topic: {step}
 Key Entities: {entity1}, {entity2}, {entity3}
 Summary: {all_results}="""
-        topic_summary_response=default_model.invoke(topic_summary_prompot)
+
+        # Save the topic summary prompt
+        crewid = CrewID.get_crewid()
+        File.save_prompt(crewid, f"step_{step_number}_summary", topic_summary_prompt)
+        
+        topic_summary_response=default_model.invoke(topic_summary_prompt)
         topic_summary_response=topic_summary_response.content.strip()
         topic_summary_response=topic_summary_response.replace("```html","").replace("```","")
     
@@ -254,7 +361,6 @@ Summary: {all_results}="""
     topic_summary_response = css_style + topic_summary_response
 
     # Save individual step report
-    from utils.capabilities.File import File
     crewid = CrewID.get_crewid()
     output_path = f"step_report.html"
     File.write_file(crewid, step_number, output_path, topic_summary_response)
@@ -266,6 +372,7 @@ Summary: {all_results}="""
         'summary': topic_summary_response,
         'execution_time': str(duration)
     }
+
 def generate_final_report(all_results: str) -> str:
     """
     Generates a final report from all the results.
@@ -283,7 +390,6 @@ def generate_final_report(all_results: str) -> str:
     research_topic = ""
     
     try:
-        from utils.capabilities.File import File
         research_plan_content = File.read_file(crewid, "", "research_plan.json")
         if research_plan_content:
             research_plan = json.loads(research_plan_content)
@@ -315,25 +421,22 @@ Format the report with:
 Data
 {all_results}"""
 
-    final_report_response=default_model.invoke(final_report_prompt)
-    final_report_response=final_report_response.content.strip()
-    final_report_response=final_report_response.replace("```html","").replace("```","")
-    logger.debug(f"Final report response: {final_report_response}")
-
-    # Define the CSS style
-    css_style = get_report_css_style()
-
-    # Remove any existing style tags
-    final_report_response = re.sub(r'<style>.*?</style>', '', final_report_response, flags=re.DOTALL)
+    # Save the final report prompt
+    File.save_prompt(crewid, "final_report", final_report_prompt)
     
-    # Add our custom style at the beginning of the HTML content
-    final_report_response = css_style + final_report_response
-
-    # Save final report
-    from utils.capabilities.File import File
-    crewid = CrewID.get_crewid()
-    output_path = f"final_report.html"
-    File.write_file(crewid, "final", output_path, final_report_response)
-
-    return final_report_response
+    final_report_response = default_model.invoke(final_report_prompt)
+    final_report = final_report_response.content.strip()
+    
+    # Clean up the response
+    final_report = final_report.replace("```html", "").replace("```", "")
+    
+    # Add CSS style
+    css_style = get_report_css_style()
+    final_report = re.sub(r'<style>.*?</style>', '', final_report, flags=re.DOTALL)
+    final_report = css_style + final_report
+    
+    # Save the final report
+    File.write_file(crewid, "final", "final_report.html", final_report)
+    
+    return final_report
 

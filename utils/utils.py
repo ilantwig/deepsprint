@@ -1,7 +1,9 @@
 import os
 import re
+import logging
 
-from utils.capabilities.Search import logger
+# Get the logger
+logger = logging.getLogger(__name__)
     
 def clean_emoji(input_text: str) -> str:
     """

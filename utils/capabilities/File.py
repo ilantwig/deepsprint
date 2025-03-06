@@ -1,13 +1,16 @@
 import html
 import json
 import unicodedata
-from utils.capabilities.Search import logger
+import logging
 from utils.utils import clean_emoji
 
 
 import os
 from pathlib import Path
 from typing import List
+
+# Get the logger
+logger = logging.getLogger(__name__)
 
 class File:
     """Util for file operations."""
@@ -23,27 +26,83 @@ class File:
     def _ensure_directories(cls, crewid=None) -> None:
         """Ensure input and output directories exist."""
         cls.CREWID_OUTPUT_DIR = Path.joinpath(cls.OUTPUT_DIR, crewid)
-        # cls.CREWID_PROMPTS_DIR = Path.joinpath(cls.PROMPTS_DIR, crewid)
+        cls.CREWID_PROMPTS_DIR = Path.joinpath(cls.PROMPTS_DIR, crewid)
         logger.debug(f"CREWID_DIR: {cls.CREWID_OUTPUT_DIR}")
 
         cls.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
         cls.CREWID_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        # cls.CREWID_PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
+        cls.CREWID_PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Ensured directories exist")
 
-    # @staticmethod
-    # def read_file(filename: str) -> str:
-    #     """Read content from file in input directory."""
-    #     # File._ensure_directories()
-    #     file_path = File.INPUT_DIR / filename
-    #     try:
-    #         with open(file_path, 'rb') as file:
-    #             content = file.read()
-    #             return content.decode('utf-8', errors='surrogatepass')
-    #     except FileNotFoundError:
-    #         return f"Error: File '{filename}' not found in {File.INPUT_DIR}"
-    #     except Exception as e:
-    #         return f"Error reading file '{filename}': {str(e)}"
+    @staticmethod
+    def save_prompt(crew_id: str, prompt_name: str, prompt_content: str) -> str:
+        """
+        Save a prompt to a text file in the prompts/crewid/ folder.
+        
+        Args:
+            crew_id: The crew ID to use for the folder path
+            prompt_name: The name of the prompt (used for the filename)
+            prompt_content: The content of the prompt to save
+            
+        Returns:
+            A string indicating success or failure
+        """
+        try:
+            File._ensure_directories(crew_id)
+            
+            # Create a filename with timestamp to avoid overwriting
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{prompt_name}_{timestamp}.txt"
+            
+            file_path = Path.joinpath(File.CREWID_PROMPTS_DIR, filename)
+            
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(prompt_content)
+                
+            logger.debug(f"Saved prompt to {file_path}")
+            return f"Successfully saved prompt to {file_path}"
+            
+        except Exception as e:
+            logger.error(f"Error saving prompt: {str(e)}")
+            return f"Error saving prompt: {str(e)}"
+
+    @staticmethod
+    def read_file(crew_id: str, step_number: str, filename: str) -> str:
+        """
+        Read content from a file in the output directory.
+        
+        Args:
+            crew_id: The crew ID to use for the folder path
+            step_number: The step number (used as a prefix for the filename)
+            filename: The name of the file to read
+            
+        Returns:
+            The content of the file as a string
+        """
+        try:
+            File._ensure_directories(crew_id)
+            
+            # Construct the file path
+            if step_number:
+                file_path = Path.joinpath(File.CREWID_OUTPUT_DIR, f"{step_number}_{filename}")
+            else:
+                file_path = Path.joinpath(File.CREWID_OUTPUT_DIR, filename)
+            
+            logger.debug(f"Reading file from: {file_path}")
+            
+            # Read the file
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+                
+            return content
+            
+        except FileNotFoundError:
+            logger.error(f"File not found: {filename}")
+            return ""
+        except Exception as e:
+            logger.error(f"Error reading file: {str(e)}")
+            return ""
 
     @staticmethod
     def write_file(crew_id: str, step_number: str, filename: str, _content: str) -> str:
